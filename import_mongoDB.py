@@ -1,128 +1,104 @@
 import psycopg2
-import pymongo
-from datetime import datetime
+from pymongo import MongoClient
+import random
+import string
 
-# Verbindung zur MongoDB herstellen
-mongo_client = pymongo.MongoClient("mongodb://localhost:27017/")
-mongo_db = mongo_client["letsmeet"]  # Name der MongoDB-Datenbank
-mongo_collection = mongo_db["users"]  # Name der Collection
+# PostgreSQL connection setup
+DB_HOST = "localhost"
+DB_NAME = "lf8_lets_meet_db"
+DB_USER = "user"
+DB_PASS = "secret"
 
-# Verbindung zur PostgreSQL-Datenbank herstellen
-pg_conn = psycopg2.connect(
-    host="localhost",
-    database="lf8_lets_meet_db",
-    user="user",
-    password="secret"
+# MongoDB connection setup
+mongo_client = MongoClient("mongodb://localhost:27017/")
+mongo_db = mongo_client["LetsMeet"]  # Hier den Namen der MongoDB-Datenbank angeben
+mongo_collection = mongo_db["users"]  # Hier den Namen der MongoDB-Collection angeben
+
+# Connect to PostgreSQL
+conn = psycopg2.connect(
+    host=DB_HOST,
+    dbname=DB_NAME,
+    user=DB_USER,
+    password=DB_PASS
 )
-pg_cursor = pg_conn.cursor()
+cursor = conn.cursor()
 
-# Funktion zum Einfügen von Benutzerdaten in PostgreSQL
-def insert_user_data(user):
-    try:
-        # Benutzer einfügen
-        pg_cursor.execute(
-            """
-            INSERT INTO User (Vorname, Nachname, Phone, CreatedAt, UpdatedAt)
-            VALUES (%s, %s, %s, %s, %s)
-            RETURNING User_ID;
-            """,
-            (
-                user["name"].split(", ")[1],  # Vorname
-                user["name"].split(", ")[0],  # Nachname
-                None,  # Telefonnummer entfernt
-                datetime.strptime(user["createdAt"], "%Y-%m-%dT%H:%M:%S"),
-                datetime.strptime(user["updatedAt"], "%Y-%m-%dT%H:%M:%S"),
-            )
-        )
-        user_id = pg_cursor.fetchone()[0]
+# Function to generate a random string for password_hash
+def generate_random_string(length=16):
+    return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
 
-        # Anmeldedaten einfügen (E-Mail wird hier als ID verwendet)
-        pg_cursor.execute(
-            """
-            INSERT INTO Anmeldedaten (User_ID, email, password_hash, status)
-            VALUES (%s, %s, %s, %s);
-            """,
-            (
-                user_id,  # Pseudonyme User_ID
-                user["_id"],  # E-Mail als ID in MongoDB
-                "<hashed_password>",  # Platzhalter für Passwort-Hash
-                "active"  # Beispielstatus
-            )
-        )
-
-        # Likes einfügen und gleichzeitig Freundschaften bei "Match" anlegen
-        for like in user.get("likes", []):
-            liker_user_id = user_id
-            liked_user_id = pg_cursor.execute(
-                """
-                SELECT User_ID FROM Anmeldedaten WHERE email = %s;
-                """,
-                (like["liked_email"],)
-            ).fetchone()[0]
-
-            # Eintrag in die Likes-Tabelle (Nur User_IDs, kein liked_email mehr)
-            pg_cursor.execute(
-                """
-                INSERT INTO Likes (liker_User_ID, liked_User_ID, timestamp, status)
-                VALUES (%s, %s, %s, %s);
-                """,
-                (
-                    liker_user_id,
-                    liked_user_id,
-                    datetime.strptime(like["timestamp"], "%Y-%m-%d %H:%M:%S"),
-                    like["status"]
-                )
-            )
-
-            # Wenn der Status "Match" ist, Freundschaft hinzufügen
-            if like["status"] == "Match":
-                pg_cursor.execute(
-                    """
-                    INSERT INTO Freunde (User_ID1, User_ID2, Timestamp)
-                    VALUES (%s, %s, %s);
-                    """,
-                    (
-                        liker_user_id,
-                        liked_user_id,
-                        datetime.strptime(like["timestamp"], "%Y-%m-%d %H:%M:%S")
-                    )
-                )
-
-        # Nachrichten einfügen (keine Umkehrung der IDs mehr)
-        for message in user.get("messages", []):
-            sender_id = user_id
-            receiver_id = pg_cursor.execute(
-                """
-                SELECT User_ID FROM Anmeldedaten WHERE email = %s;
-                """,
-                (message["receiver_email"],)
-            ).fetchone()[0]
-
-            pg_cursor.execute(
-                """
-                INSERT INTO Nachrichten (Sender_User_ID, Receiver_User_ID, Message_Content, Timestamp)
-                VALUES (%s, %s, %s, %s);
-                """,
-                (
-                    sender_id,
-                    receiver_id,
-                    message["message"],
-                    datetime.strptime(message["timestamp"], "%Y-%m-%d %H:%M:%S"),
-                )
-            )
-
-        # Änderungen speichern
-        pg_conn.commit()
-
-    except Exception as e:
-        pg_conn.rollback()
-        print(f"Fehler beim Einfügen von Daten für Benutzer {user['_id']}: {e}")
-
-# Alle Benutzer aus der MongoDB lesen und in PostgreSQL einfügen
+# Iterate over MongoDB users and process data
 for mongo_user in mongo_collection.find():
-    insert_user_data(mongo_user)
+    user_email = mongo_user["_id"]
+    user_name = mongo_user["name"]
+    created_at = mongo_user["createdAt"]
+    updated_at = mongo_user["updatedAt"]
 
-# Verbindungen schließen
-pg_cursor.close()
-pg_conn.close()
-mongo_client.close()
+    # Insert into the 'users' table
+    cursor.execute("""
+        INSERT INTO users (vorname, nachname, created_at, updated_at)
+        VALUES (%s, %s, %s, %s) RETURNING user_id
+    """, (user_name.split(", ")[1], user_name.split(", ")[0], created_at, updated_at))
+
+    user_id = cursor.fetchone()[0]
+
+    # Insert into 'anmeldedaten' table with a placeholder for password_hash
+    cursor.execute("""
+        INSERT INTO anmeldedaten (user_id, email, password_hash)
+        VALUES (%s, %s, %s)
+    """, (user_id, user_email, generate_random_string()))  # Placeholder for password_hash
+
+    # Process likes and insert into 'likes' table
+    for like in mongo_user.get("likes", []):
+        liked_email = like["liked_email"]
+        status = like["status"]
+        timestamp = like["timestamp"]
+
+        # Get the user_id of the liked user from the email
+        cursor.execute("SELECT user_id FROM anmeldedaten WHERE email = %s", (liked_email,))
+        liked_user_id = cursor.fetchone()
+
+        if liked_user_id:
+            liked_user_id = liked_user_id[0]
+            liker_user_id = user_id if user_id < liked_user_id else liked_user_id
+            liked_user_id = liked_user_id if user_id < liked_user_id else user_id
+
+            cursor.execute("""
+                INSERT INTO likes (liker_user_id, liked_user_id, timestamp, status)
+                VALUES (%s, %s, %s, %s)
+            """, (liker_user_id, liked_user_id, timestamp, status))
+
+            # Check for mutual likes and insert into 'freunde' table
+            if status == "mutual":
+                if liker_user_id < liked_user_id:
+                    cursor.execute("""
+                        INSERT INTO freunde (user_id1, user_id2)
+                        VALUES (%s, %s)
+                    """, (liker_user_id, liked_user_id))
+                else:
+                    cursor.execute("""
+                        INSERT INTO freunde (user_id1, user_id2)
+                        VALUES (%s, %s)
+                    """, (liked_user_id, liker_user_id))
+
+    # Process messages and insert into 'nachrichten' table
+    for message in mongo_user.get("messages", []):
+        receiver_email = message["receiver_email"]
+        message_content = message["message"]
+        timestamp = message["timestamp"]
+
+        # Get the user_id of the receiver from the email
+        cursor.execute("SELECT user_id FROM anmeldedaten WHERE email = %s", (receiver_email,))
+        receiver_user_id = cursor.fetchone()
+
+        if receiver_user_id:
+            receiver_user_id = receiver_user_id[0]
+            cursor.execute("""
+                INSERT INTO nachrichten (sender_user_id, receiver_user_id, message_content, timestamp)
+                VALUES (%s, %s, %s, %s)
+            """, (user_id, receiver_user_id, message_content, timestamp))
+
+# Commit and close the connection
+conn.commit()
+cursor.close()
+conn.close()
