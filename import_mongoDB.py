@@ -34,19 +34,27 @@ for mongo_user in mongo_collection.find():
     created_at = mongo_user["createdAt"]
     updated_at = mongo_user["updatedAt"]
 
-    # Insert into the 'users' table
-    cursor.execute("""
-        INSERT INTO users (vorname, nachname, created_at, updated_at)
-        VALUES (%s, %s, %s, %s) RETURNING user_id
-    """, (user_name.split(", ")[1], user_name.split(", ")[0], created_at, updated_at))
+    # Check if the user already exists in PostgreSQL by email
+    cursor.execute("SELECT user_id FROM anmeldedaten WHERE email = %s", (user_email,))
+    existing_user = cursor.fetchone()
 
-    user_id = cursor.fetchone()[0]
+    if existing_user:
+        print(f"Benutzer mit E-Mail {user_email} existiert bereits. Daten werden aktualisiert.")
+        user_id = existing_user[0]
+    else:
+        # Insert into the 'users' table
+        cursor.execute("""
+            INSERT INTO users (vorname, nachname, created_at, updated_at)
+            VALUES (%s, %s, %s, %s) RETURNING user_id
+        """, (user_name.split(", ")[1], user_name.split(", ")[0], created_at, updated_at))
 
-    # Insert into 'anmeldedaten' table with a placeholder for password_hash
-    cursor.execute("""
-        INSERT INTO anmeldedaten (user_id, email, password_hash)
-        VALUES (%s, %s, %s)
-    """, (user_id, user_email, generate_random_string()))  # Placeholder for password_hash
+        user_id = cursor.fetchone()[0]
+
+        # Insert into 'anmeldedaten' table with a placeholder for password_hash
+        cursor.execute("""
+            INSERT INTO anmeldedaten (user_id, email, password_hash)
+            VALUES (%s, %s, %s)
+        """, (user_id, user_email, generate_random_string()))  # Placeholder for password_hash
 
     # Process likes and insert into 'likes' table
     for like in mongo_user.get("likes", []):
@@ -64,7 +72,7 @@ for mongo_user in mongo_collection.find():
             liked_user_id = liked_user_id if user_id < liked_user_id else user_id
 
             cursor.execute("""
-                INSERT INTO likes (liker_user_id, liked_user_id, timestamp, status)
+                INSERT INTO likes (liker_user_id, liked_user_id, created_at, status)
                 VALUES (%s, %s, %s, %s)
             """, (liker_user_id, liked_user_id, timestamp, status))
 
@@ -94,7 +102,7 @@ for mongo_user in mongo_collection.find():
         if receiver_user_id:
             receiver_user_id = receiver_user_id[0]
             cursor.execute("""
-                INSERT INTO nachrichten (sender_user_id, receiver_user_id, message_content, timestamp)
+                INSERT INTO nachrichten (sender_user_id, receiver_user_id, message_content, created_at)
                 VALUES (%s, %s, %s, %s)
             """, (user_id, receiver_user_id, message_content, timestamp))
 
