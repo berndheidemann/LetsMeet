@@ -1,80 +1,102 @@
-import psycopg2
 import xml.etree.ElementTree as ET
+import psycopg2
+import random
 
-# Verbindung zur PostgreSQL-Datenbank herstellen
-pg_conn = psycopg2.connect(
-    host="localhost",
-    database="lf8_lets_meet_db",
-    user="user",
-    password="secret"
-)
-pg_cursor = pg_conn.cursor()
+DB_HOST = "localhost"
+DB_NAME = "lf8_lets_meet_db"
+DB_USER = "user"
+DB_PASS = "secret"
 
-# Funktion, um Hobby in die Hobbys-Tabelle einzufügen
-def insert_hobby(hobby_name):
-    # Überprüfen, ob das Hobby bereits existiert
-    pg_cursor.execute(
-        """
-        SELECT Hobby_ID FROM Hobbys WHERE Name = %s;
-        """,
-        (hobby_name,)
-    )
-    hobby_id = pg_cursor.fetchone()
+def get_or_create_user(email, full_name, conn):
+    with conn.cursor() as cur:
+        # Prüfen, ob der Nutzer bereits existiert
+        cur.execute("SELECT user_id FROM anmeldedaten WHERE email = %s", (email,))
+        user = cur.fetchone()
 
-    if hobby_id is None:
-        # Hobby einfügen, wenn es nicht existiert
-        pg_cursor.execute(
+        if user:
+            return user[0]
+
+        # Name trennen
+        if "," in full_name:
+            nachname, vorname = map(str.strip, full_name.split(",", 1))
+        else:
+            vorname = full_name.strip()
+            nachname = "Platzhalter"
+
+        # Neuen Nutzer anlegen
+        cur.execute(
             """
-            INSERT INTO Hobbys (Name) VALUES (%s) RETURNING Hobby_ID;
+            INSERT INTO users (vorname, nachname, phone, address, gender, birthday)
+            VALUES (%s, %s, %s, %s, %s, %s) RETURNING user_id
             """,
-            (hobby_name,)
+            (vorname, nachname, "000000", "Platzhalterstraße", "Unbekannt", "2000-01-01"),
         )
-        hobby_id = pg_cursor.fetchone()[0]
-    
-    return hobby_id
+        user_id = cur.fetchone()[0]
 
-# Funktion, um Benutzer und deren Hobbys zu verknüpfen
-def insert_user_hobbies(user_email, hobbies):
-    # Hole User_ID aus der E-Mail
-    pg_cursor.execute(
-        """
-        SELECT User_ID FROM Anmeldedaten WHERE email = %s;
-        """,
-        (user_email,)
-    )
-    user_id = pg_cursor.fetchone()
-
-    if user_id is None:
-        print(f"Benutzer mit E-Mail {user_email} nicht gefunden.")
-        return
-
-    user_id = user_id[0]
-
-    # Hobbys für diesen Benutzer einfügen
-    for prio, hobby in enumerate(hobbies, 1):
-        hobby_id = insert_hobby(hobby)  # Hole oder füge das Hobby ein
-        pg_cursor.execute(
+        # In anmeldedaten einfügen
+        cur.execute(
             """
-            INSERT INTO User_Hobbys (User_ID, Hobby_ID, Prio)
-            VALUES (%s, %s, %s);
+            INSERT INTO anmeldedaten (user_id, email, password_hash, status)
+            VALUES (%s, %s, %s, %s)
             """,
-            (user_id, hobby_id, prio)
+            (user_id, email, "hashed_password", "active"),
         )
 
-# XML-Datei einlesen und parsen
-tree = ET.parse('Lets_Meet_Hobbies.xml')
-root = tree.getroot()
+        conn.commit()
+        return user_id
 
-# Benutzer und deren Hobbys in die Datenbank einfügen
-for user in root.findall('user'):
-    email = user.find('email').text
-    name = user.find('name').text
-    hobbies = [hobby.text for hobby in user.findall('hobby')]
+def insert_hobby_if_not_exists(hobby_name, conn):
+    with conn.cursor() as cur:
+        # Prüfen, ob das Hobby existiert
+        cur.execute("SELECT hobby_id FROM hobbys WHERE name = %s", (hobby_name,))
+        hobby = cur.fetchone()
 
-    # Benutzer und Hobbys in die Datenbank einfügen
-    insert_user_hobbies(email, hobbies)
+        if hobby:
+            return hobby[0]
 
-# Änderungen speichern und Verbindungen schließen
-pg_conn.commit()
-pg_cursor.close()
-pg_conn.close()
+        # Neues Hobby hinzufügen
+        cur.execute("INSERT INTO hobbys (name) VALUES (%s) RETURNING hobby_id", (hobby_name,))
+        hobby_id = cur.fetchone()[0]
+
+        conn.commit()
+        return hobby_id
+
+def insert_user_hobbies(user_id, hobbies, conn):
+    with conn.cursor() as cur:
+        for hobby_name in hobbies:
+            hobby_id = insert_hobby_if_not_exists(hobby_name, conn)
+
+            # Prüfen, ob die Kombination aus user_id und hobby_id existiert
+            cur.execute(
+                "SELECT 1 FROM user_hobbys WHERE user_id = %s AND hobby_id = %s",
+                (user_id, hobby_id),
+            )
+            if not cur.fetchone():
+                prio = random.randint(1, 10)
+                cur.execute(
+                    "INSERT INTO user_hobbys (user_id, hobby_id, prio) VALUES (%s, %s, %s)",
+                    (user_id, hobby_id, prio),
+                )
+
+        conn.commit()
+
+def process_xml():
+    tree = ET.parse("Lets_Meet_Hobbies.xml")
+    root = tree.getroot()
+
+    conn = psycopg2.connect(
+        host=DB_HOST, database=DB_NAME, user=DB_USER, password=DB_PASS
+    )
+
+    for user in root.findall("user"):
+        email = user.find("email").text
+        full_name = user.find("name").text
+        hobbies = [hobby.text for hobby in user.findall("hobbies/hobby")]
+
+        user_id = get_or_create_user(email, full_name, conn)
+        insert_user_hobbies(user_id, hobbies, conn)
+
+    conn.close()
+
+if __name__ == "__main__":
+    process_xml()
