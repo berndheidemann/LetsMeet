@@ -62,7 +62,7 @@ def insert_user_hobbies(user_email, hobbies):
         )
 
 # XML-Datei einlesen und parsen
-tree = ET.parse('users.xml')
+tree = ET.parse('Lets_Meet_Hobbies.xml')
 root = tree.getroot()
 
 # Benutzer und deren Hobbys in die Datenbank einfügen
