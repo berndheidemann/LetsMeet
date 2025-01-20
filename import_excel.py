@@ -53,6 +53,9 @@ def parse_birthday(birthday):
         return None
 
 def parse_hobbies(hobbies_str):
+    """
+    hobbies_str vendrá con algo tipo 'Hobby1%Prio;Hobby2%Prio;...'
+    """
     if not hobbies_str or not isinstance(hobbies_str, str):
         return []
     items = hobbies_str.split(';')
@@ -88,9 +91,11 @@ def main():
         cursor = conn.cursor()
         print("Conexión a PostgreSQL exitosa.")
 
-        # Leer el archivo Excel
+        # Leer el archivo Excel en un DataFrame
         df = pd.read_excel(EXCEL_FILE_PATH)
-        print("Archivo Excel leído exitosamente.")
+        # Asegurarnos de que los nombres de columnas no tengan espacios extra
+        df.columns = df.columns.str.strip()
+        print("Archivo Excel leído y columnas limpiadas exitosamente.")
 
         for index, row in df.iterrows():
             try:
@@ -112,13 +117,6 @@ def main():
                     continue
                 email = email.strip()
 
-                # Verificar si el email ya existe
-                cursor.execute("SELECT user_id FROM anmeldedaten WHERE email = %s", (email,))
-                existing_user = cursor.fetchone()
-                if existing_user:
-                    print(f"Fila {index}: email ya existe ({email}) => se omite.")
-                    continue
-
                 # 4) Género
                 gender = parse_gender(row.get('Geschlecht'))
 
@@ -129,7 +127,68 @@ def main():
                 birthday = parse_birthday(row.get('Geburtsdatum'))
 
                 # =====================
-                # Insertar en users
+                # Comprobar si el usuario ya existe por el email
+                # =====================
+                cursor.execute("SELECT user_id FROM anmeldedaten WHERE email = %s", (email,))
+                existing_user = cursor.fetchone()
+
+                if existing_user:
+                    # Si existe, hacemos un UPDATE para rellenar/corregir gender, interesado en, fecha
+                    user_id = existing_user[0]
+
+                    update_users_sql = """
+                       UPDATE users
+                          SET gender = %s,
+                              interessiert_an = %s,
+                              birthday = %s,
+                              updated_at = CURRENT_TIMESTAMP
+                        WHERE user_id = %s
+                    """
+                    cursor.execute(update_users_sql, (
+                        gender,
+                        interested_in,
+                        birthday,
+                        user_id
+                    ))
+
+                    # -- OPCIONAL: actualizar hobbies (agregar los nuevos)
+                    for (hobby_name, prio) in hobbies:
+                        # Ver si existe en la tabla hobbys
+                        cursor.execute("SELECT hobby_id FROM hobbys WHERE name = %s", (hobby_name,))
+                        row_hobby = cursor.fetchone()
+                        if row_hobby:
+                            hobby_id = row_hobby[0]
+                        else:
+                            cursor.execute(
+                                "INSERT INTO hobbys (name) VALUES (%s) RETURNING hobby_id",
+                                (hobby_name,)
+                            )
+                            hobby_id = cursor.fetchone()[0]
+
+                        # Ver si ya está en user_hobbys
+                        cursor.execute("""
+                            SELECT prio FROM user_hobbys 
+                             WHERE user_id = %s AND hobby_id = %s
+                        """, (user_id, hobby_id))
+                        existing_hobby_rel = cursor.fetchone()
+                        if existing_hobby_rel:
+                            # Podríamos actualizar la prio si quisiéramos
+                            # cursor.execute("UPDATE user_hobbys SET prio = %s WHERE user_id = %s AND hobby_id = %s",
+                            #               (prio, user_id, hobby_id))
+                            pass
+                        else:
+                            # Insertar la relación con su prio
+                            cursor.execute("""
+                                INSERT INTO user_hobbys (user_id, hobby_id, prio)
+                                VALUES (%s, %s, %s)
+                            """, (user_id, hobby_id, prio))
+
+                    conn.commit()
+                    # Y pasamos a la siguiente fila
+                    continue
+
+                # =====================
+                # Si NO existe, crear
                 # =====================
                 insert_user_sql = """
                     INSERT INTO users (vorname, nachname, gender, interessiert_an, birthday)
@@ -145,9 +204,6 @@ def main():
                 ))
                 user_id = cursor.fetchone()[0]
 
-                # =====================
-                # Insertar en anmeldedaten
-                # =====================
                 insert_anmeldedaten_sql = """
                     INSERT INTO anmeldedaten (user_id, email, password_hash, status)
                     VALUES (%s, %s, %s, %s)
