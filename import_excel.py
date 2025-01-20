@@ -25,15 +25,21 @@ def parse_name(full_name):
         return (None, None)
 
 def parse_gender(gender_str):
+    """
+    En el Excel, los valores son 'm', 'w' o 'nb'.
+    """
     if not isinstance(gender_str, str):
         return None
     gender_str = gender_str.strip().lower()
-    if gender_str in ['m', 'männlich']:
+    if gender_str == 'm':
         return 'm'
-    elif gender_str in ['w', 'weiblich']:
+    elif gender_str == 'w':
         return 'w'
-    elif 'nicht' in gender_str or 'binär' in gender_str or gender_str == 'd':
-        return 'd'
+    elif gender_str == 'nb':
+        # Puedes devolver 'nb' directamente o, si prefieres,
+        # devolver 'd' (para "divers"), como prefieras.
+        return 'nb'
+    # Si no coincide, devolvemos None
     return None
 
 def parse_interessiert_an(value):
@@ -93,9 +99,11 @@ def main():
 
         # Leer el archivo Excel en un DataFrame
         df = pd.read_excel(EXCEL_FILE_PATH)
-        # Asegurarnos de que los nombres de columnas no tengan espacios extra
+        # Quitar espacios extra en los nombres de columna
         df.columns = df.columns.str.strip()
         print("Archivo Excel leído y columnas limpiadas exitosamente.")
+        # Opcional: imprime los nombres de columna para verificar
+        # print("Columnas del Excel:", df.columns.tolist())
 
         for index, row in df.iterrows():
             try:
@@ -118,7 +126,9 @@ def main():
                 email = email.strip()
 
                 # 4) Género
-                gender = parse_gender(row.get('Geschlecht'))
+                # => En tu Excel la columna se llama: "Geschlecht (m/w/nonbinary)"
+                gender_raw = row.get('Geschlecht (m/w/nonbinary)')
+                gender = parse_gender(gender_raw)
 
                 # 5) Interessiert an
                 interested_in = parse_interessiert_an(row.get('Interessiert an'))
@@ -171,12 +181,7 @@ def main():
                              WHERE user_id = %s AND hobby_id = %s
                         """, (user_id, hobby_id))
                         existing_hobby_rel = cursor.fetchone()
-                        if existing_hobby_rel:
-                            # Podríamos actualizar la prio si quisiéramos
-                            # cursor.execute("UPDATE user_hobbys SET prio = %s WHERE user_id = %s AND hobby_id = %s",
-                            #               (prio, user_id, hobby_id))
-                            pass
-                        else:
+                        if not existing_hobby_rel:
                             # Insertar la relación con su prio
                             cursor.execute("""
                                 INSERT INTO user_hobbys (user_id, hobby_id, prio)
