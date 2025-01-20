@@ -1,3 +1,77 @@
+import pandas as pd
+import psycopg2
+from datetime import datetime
+
+# Configuración de la conexión a PostgreSQL
+DB_HOST = "localhost"
+DB_NAME = "lf8_lets_meet_db"
+DB_USER = "user"
+DB_PASS = "secret"
+
+EXCEL_FILE_PATH = "/workspace/LetsMeet/Lets Meet DB Dump.xlsx"
+
+def parse_name(full_name):
+    """
+    'Nachname, Vorname' -> (apellido, nombre)
+    """
+    if not full_name or not isinstance(full_name, str):
+        return (None, None)
+    if ',' not in full_name:
+        return (None, None)
+    try:
+        last_name, first_name = map(str.strip, full_name.split(',', 1))
+        return (last_name, first_name)
+    except:
+        return (None, None)
+
+def parse_gender(gender_str):
+    if not isinstance(gender_str, str):
+        return None
+    gender_str = gender_str.strip().lower()
+    if gender_str in ['m', 'männlich']:
+        return 'm'
+    elif gender_str in ['w', 'weiblich']:
+        return 'w'
+    elif 'nicht' in gender_str or 'binär' in gender_str or gender_str == 'd':
+        return 'd'
+    return None
+
+def parse_interessiert_an(value):
+    if not isinstance(value, str):
+        return None
+    return value.strip()
+
+def parse_birthday(birthday):
+    if pd.isnull(birthday):
+        return None
+    try:
+        birthday_parsed = pd.to_datetime(birthday, dayfirst=True, errors='coerce')
+        if pd.isnull(birthday_parsed):
+            return None
+        return birthday_parsed.date()
+    except:
+        return None
+
+def parse_hobbies(hobbies_str):
+    if not hobbies_str or not isinstance(hobbies_str, str):
+        return []
+    items = hobbies_str.split(';')
+    result = []
+    for item in items:
+        parts = item.split('%')
+        if len(parts) < 2:
+            continue
+        hobby_name = parts[0].strip()
+        prio_val = 0
+        if len(parts) >= 2:
+            try:
+                prio_val = int(parts[1])
+            except:
+                prio_val = 0
+        if hobby_name:
+            result.append((hobby_name, prio_val))
+    return result
+
 def main():
     conn = None
     cursor = None
