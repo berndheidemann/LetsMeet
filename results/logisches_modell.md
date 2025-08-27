@@ -1,0 +1,1 @@
+![img.png](../images/logisches_model.png)

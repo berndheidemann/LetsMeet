@@ -1,0 +1,1 @@
+![img.png](../images/konzeptionelles_modell.png)
