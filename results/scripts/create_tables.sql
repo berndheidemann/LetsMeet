@@ -21,18 +21,17 @@ CREATE TABLE User
     Email          TEXT UNIQUE NOT NULL,
     Street         TEXT,
     HouseNumber    TEXT,
-    City           TEXT,
+    ZipCode        TEXT,
     BirthDate      DATE,
     Gender         TEXT,
     InterestedIn   TEXT,
     Phone          TEXT,
     ProfilePicture TEXT,
-    ZipCode        TEXT,
-    FOREIGN KEY (ZipCode) REFERENCES Location (ZipCode)
+    FOREIGN KEY (ZipCode) REFERENCES ZIP (ZipCode)
 );
 
--- Table: Location
-CREATE TABLE Location
+-- Table: ZIP
+CREATE TABLE ZIP
 (
     ZipCode TEXT PRIMARY KEY,
     City    TEXT
@@ -72,42 +71,24 @@ CREATE TABLE UserConversation
     FOREIGN KEY (ConversationID) REFERENCES Conversation (ID) ON DELETE CASCADE
 );
 
--- Table: ConversationParticipant
-CREATE TABLE ConversationParticipant
-(
-    ConversationID INTEGER,
-    ParticipantID  INTEGER,
-    PRIMARY KEY (ConversationID, ParticipantID),
-    FOREIGN KEY (ConversationID) REFERENCES Conversation (ID) ON DELETE CASCADE,
-    FOREIGN KEY (ParticipantID) REFERENCES User (ID) ON DELETE CASCADE
-);
-
 -- Table: Message
 CREATE TABLE Message
 (
     ID             INTEGER PRIMARY KEY,
     ConversationID INTEGER,
-    SenderID       INTEGER,
+    Sender         INTEGER,
     Content        TEXT,
     FOREIGN KEY (ConversationID) REFERENCES Conversation (ID) ON DELETE CASCADE,
-    FOREIGN KEY (SenderID) REFERENCES User (ID) ON DELETE CASCADE
+    FOREIGN KEY (Sender) REFERENCES User (ID) ON DELETE CASCADE
 );
 
 -- Table: Image
 CREATE TABLE Image
 (
-    ID   INTEGER PRIMARY KEY,
-    Path TEXT
-);
-
--- Table: UserImages (m:n relation User - Image)
-CREATE TABLE UserImages
-(
-    UserID  INTEGER,
-    ImageID INTEGER,
-    PRIMARY KEY (UserID, ImageID),
-    FOREIGN KEY (UserID) REFERENCES User (ID) ON DELETE CASCADE,
-    FOREIGN KEY (ImageID) REFERENCES Image (ID) ON DELETE CASCADE
+    ID         INTEGER PRIMARY KEY,
+    UploaderId INTEGER,
+    Path       TEXT,
+    FOREIGN KEY (UploaderId) REFERENCES User (ID) ON DELETE CASCADE
 );
 
 -- Table: UserLikes (User likes another User)
