@@ -10,19 +10,20 @@ Anzeige-App der Kundin wieder versorgen kann.
 ## Euer Arbeitsauftrag
 
 Ihr arbeitet in drei Akten. Akt 1 und Akt 2 sind unten vollständig beschrieben. Für jeden aktuell
-freigegebenen Akt erzeugt ihr einen **reproduzierbaren Import aus einer leeren Datenbank** und
-prüft ihn gegen die dort genannten Anforderungen. Die Tabellen hinter den geforderten Views dürft
-ihr selbst entwerfen.
+freigegebenen Akt baut ihr die Datenbank mit euren Skripten **aus einer leeren PostgreSQL-Datenbank neu auf**
+und prüft das Ergebnis. Ein anderes Team muss denselben Aufbau wiederholen können — genau das ist
+mit einem reproduzierbaren Import gemeint. Die Tabellen hinter den geforderten Views dürft ihr
+selbst entwerfen.
 
 - Versioniert SQL, Importcode, eigene Datenprüfungen und kurze Markdown-Dokumentationen mit Git.
 - Erstellt physische Modelle beziehungsweise DDL für die aufgenommenen Quelldaten und das
   PostgreSQL-Zielsystem.
 - Dokumentiert Annahmen, Transformationsregeln, Konfliktentscheidungen und nicht übernommene
   Datensätze nachvollziehbar.
-- Der Browser-Prüfstand gibt formatives Feedback. Für ein Akt-Gate zählt ausschließlich der
-  CLI-Repro-Lauf aus einer leeren Datenbank.
-- Haltet ihr ein rotes Ergebnis für fachlich falsch, eskaliert es mit Quelle, betroffenem
-  Datensatz und Begründung an die Lehrkraft.
+- Der Prüfstand in der Kundinnen-App gibt euch Hinweise zum Weiterarbeiten. Für den Abschluss eines
+  Akts zählt der Prüfbefehl im Terminal nach einem frischen Datenbankaufbau.
+- Haltet ihr ein rotes Ergebnis für fachlich falsch, gebt der Lehrkraft Quelle, betroffenen
+  Datensatz und eure Begründung.
 
 Die Begleit-Website führt euch durch die Übergänge:
 
@@ -45,8 +46,10 @@ Danach sind erreichbar:
 
 PostgreSQL-Zugang: Benutzer `user`, Passwort `secret`.
 
-Die Kundinnen-App startet mit Vertragsversion V1. Wenn ein späterer Akt eine neue Vertragsversion
-freigibt, startet ihr nur diesen Service mit der dort genannten Version neu. Beispiel für V2:
+Die Kürzel V1, V2 und V3 bezeichnen die technischen Datenverträge für Akt 1, Akt 2 und Akt 3.
+In Befehlen müsst ihr diese Kürzel genau so verwenden. Die Kundinnen-App startet mit V1. Wenn ein
+späterer Akt den nächsten Datenvertrag freigibt, startet ihr nur die Kundinnen-App mit der dort
+genannten Version neu. Beispiel für Akt 2 mit V2:
 
 ```bash
 LETSMEET_CONTRACT_VERSION=V2 docker compose up -d --force-recreate kundinnen_app
@@ -59,12 +62,12 @@ $env:LETSMEET_CONTRACT_VERSION="V2"
 docker compose up -d --force-recreate kundinnen_app
 ```
 
-Die Check-Historie und technische Gate-Artefakte liegen im Volume
+Der Verlauf eurer Prüfläufe und die dazugehörigen technischen Prüfdateien liegen im Volume
 `lf8_lets_meet_check_history` und bleiben beim Container-Neustart erhalten.
 
 ---
 
-# Akt 1 — Walking Skeleton aus Excel
+# Akt 1 — Erste Daten aus Excel bis zur Kundinnen-App bringen
 
 ## Ausgangslage
 
@@ -81,7 +84,9 @@ Geburtsdatum in teilweise zusammengesetzten Feldern.
 5. Schreibt eigene SQL-Abfragen oder automatisierte Tests für eure zentralen Importannahmen.
 6. Dokumentiert Importbefehl, Testergebnisse und bekannte Grenzen.
 
-## Migrationsvertrag V1
+## Datenvertrag für Akt 1 (V1)
+
+Die View ist die vereinbarte Schnittstelle zwischen eurer Datenbank und der Kundinnen-App:
 
 ```sql
 -- Pflicht-View, Spaltennamen und -typen exakt:
@@ -97,20 +102,22 @@ Regeln:
 - eine Zeile pro migrierter Person;
 - `email` eindeutig und nicht leer;
 - keine Platzhalter für misslungene Zeilen — was nicht importiert ist, fehlt sichtbar;
-- Textvergleich nach Unicode-NFC und in V1 quelltreu einschließlich äußerer Leerzeichen;
+- vor dem Textvergleich normalisiert der Prüfstand Texte auf Unicode-NFC; in Akt 1 bleiben die
+  Inhalte einschließlich äußerer Leerzeichen ansonsten genau wie in der Quelle;
 - `city` enthält den vollständigen Ortsnamen aus der Quelle, auch wenn darin ein Komma vorkommt.
 
-## V1-Repro-Gate
+## Abschluss von Akt 1: Neuaufbau prüfen
 
-Reproduziert euren Excel-Import in einer leeren Datenbank und führt aus:
+Baut euren Excel-Import mit euren Skripten in einer leeren Datenbank neu auf. Führt danach diesen
+Prüfbefehl im Terminal aus:
 
 ```bash
 docker compose run --rm -e CONTRACT_VERSION=V1 kundinnen_app \
   node server/dist/cli.js
 ```
 
-Nur Exit-Code `0` ist ein grünes V1-Gate. Erklärt V1 anschließend in der Begleit-Website als grün;
-dort öffnet sich Akt 2.
+Endet der Befehl mit Exit-Code `0` — also ohne Fehler —, ist die Abschlussprüfung für Akt 1
+bestanden. Setzt danach in der Begleit-Website den Haken für Akt 1; dort öffnet sich Akt 2.
 
 ---
 
@@ -146,9 +153,10 @@ ergänzende Profildaten sowie gerichtete Likes und Nachrichten. Analysiert insbe
 verschachtelte Datensätze, Referenzen, Mehrfachwerte und Widersprüche zur Excel-Quelle. Holt für
 offene fachliche Konflikte eine Kundinnenentscheidung ein und dokumentiert die angewandte Regel.
 
-## Migrationsvertrag V2
+## Datenvertrag für Akt 2 (V2)
 
-V2 ersetzt den V1-Spaltensatz und gilt kumulativ:
+V2 erweitert den Datenvertrag aus Akt 1. Für `migration_users` gilt jetzt der neue Spaltensatz;
+zusätzlich kommen vier weitere Views hinzu:
 
 ```sql
 -- Pflicht-Views, Namen und Typen exakt:
@@ -168,7 +176,7 @@ Regeln:
 - `source` dokumentiert die Herkunft einer Hobbyzuordnung; in Akt 2 ist sie `excel`.
 - Likes und Nachrichten sind gerichtet: Absender beziehungsweise auslösende Person stehen links.
 - Bei widersprüchlichen Kontaktdaten gilt die eingeholte und dokumentierte Kundinnenentscheidung.
-- Vergleichssemantik wie in V1; Zeitpunkte werden typisiert und auf die Sekunde genau verglichen.
+- Textvergleich wie in Akt 1; Zeitpunkte werden als Zeitwerte und auf die Sekunde genau verglichen.
 
 Startet die Anzeige-App für Akt 2 neu:
 
@@ -176,17 +184,19 @@ Startet die Anzeige-App für Akt 2 neu:
 LETSMEET_CONTRACT_VERSION=V2 docker compose up -d --force-recreate kundinnen_app
 ```
 
-## V2-Repro-Gate
+## Abschluss von Akt 2: Gemeinsamen Neuaufbau prüfen
 
-Reproduziert Excel- und MongoDB-Import gemeinsam in einer leeren Datenbank:
+Baut Excel- und MongoDB-Import gemeinsam in einer leeren Datenbank neu auf. Führt danach diesen
+Prüfbefehl im Terminal aus:
 
 ```bash
 docker compose run --rm -e CONTRACT_VERSION=V2 kundinnen_app \
   node server/dist/cli.js
 ```
 
-Nur Exit-Code `0` ist ein grünes V2-Gate. Registriert vorher eure ERD-Share-URL und erklärt V2
-dann in der Begleit-Website als grün. Danach folgt die nächste Anweisung.
+Endet der Befehl mit Exit-Code `0` — also ohne Fehler —, ist die Abschlussprüfung für Akt 2
+bestanden. Registriert vorher eure ERD-Share-URL und setzt anschließend in der Begleit-Website den
+Haken für Akt 2. Danach folgt die nächste Anweisung.
 
 ---
 
@@ -216,9 +226,9 @@ results/
     tests/
 ```
 
-Verbindlich ist nicht der Dateiname, sondern dass ein anderes Team eure Datenbank aus einer leeren
-PostgreSQL-Instanz reproduzieren, eure Entscheidungen nachvollziehen und die Akt-Gates erneut
-ausführen kann.
+Verbindlich ist nicht der Dateiname. Ein anderes Team muss eure Datenbank mit euren Skripten aus
+einer leeren PostgreSQL-Datenbank neu aufbauen, eure Entscheidungen nachvollziehen und die Prüfbefehle für
+die Akte erneut ausführen können.
 
 ## Datenbankzugriff in Werkzeugen
 
@@ -244,12 +254,6 @@ mongodb://localhost:27017/LetsMeet
 docker compose down -v
 ```
 
-**Achtung:** Dieser Befehl löscht PostgreSQL, MongoDB, Check-Historie und Gate-Artefakte lokal. Nutzt
-ihn nur, wenn ihr wirklich wieder bei einer leeren Infrastruktur beginnen möchtet. Euer Git-Stand
-bleibt erhalten.
-
----
-
-**Qualitätshinweis:** Die Lernumgebung wurde technisch, automatisiert und mit simulierten Personas
-geprüft. Vor dem erstmaligen Einsatz in einer Lerngruppe ist weiterhin ein One-to-One-Pilot mit
-2–3 Auszubildenden vorgesehen.
+**Achtung:** Dieser Befehl löscht eure lokalen PostgreSQL- und MongoDB-Daten sowie den Verlauf der
+Prüfläufe. Nutzt ihn nur, wenn ihr wirklich wieder mit leeren Datenbanken beginnen möchtet. Euer
+Git-Stand bleibt erhalten.
