@@ -3,6 +3,8 @@ volumes:
     driver: local
   lf8_lets_meet_mongodb_data:
     driver: local
+  lf8_lets_meet_check_history:
+    driver: local
 
 services:
   postgres_for_lf8_starter:
@@ -19,10 +21,27 @@ services:
 
   mongodb_for_lf8:
     container_name: lf8_lets_meet_mongodb_container
-    image: berndheidemann/letsmeet-mongodb:latest
+    image: berndheidemann/letsmeet-mongodb:v2.1-2026-07-25
     volumes:
       - lf8_lets_meet_mongodb_data:/data/db
     ports:
       - "27017:27017"
     environment:
       MONGO_INITDB_DATABASE: LetsMeet
+
+  kundinnen_app:
+    container_name: lf8_lets_meet_kundinnen_app
+    image: berndheidemann/letsmeet-kundinnen-app:v3-2026-07-29
+    ports:
+      - "3611:3611"
+    volumes:
+      - lf8_lets_meet_check_history:/data
+    environment:
+      PGHOST: postgres_for_lf8_starter
+      PGPORT: 5432
+      PGDATABASE: lf8_lets_meet_db
+      PGUSER: user
+      PGPASSWORD: secret
+      CONTRACT_VERSION: ${LETSMEET_CONTRACT_VERSION:-V1}
+    depends_on:
+      - postgres_for_lf8_starter

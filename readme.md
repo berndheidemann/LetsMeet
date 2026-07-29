@@ -1,226 +1,255 @@
-## Lernsituation: Migration "Let’s Meet"
+# Lernsituation: LetsMeet-Datenmigration
 
-### Ausgangslage:
+Die **Let’s Meet GmbH** wechselt nach einer schwierigen Trennung den IT-Dienstleister. Statt einer
+laufenden Datenbank liegen nur schrittweise freigegebene Datenstände vor. Euer
+Team rekonstruiert daraus eine PostgreSQL-Datenbank, die eine
+Anzeige-App der Kundin wieder versorgen kann.
 
-Ihr Unternehmen hat eine neue Kundin gewonnen: die _Let’s Meet GmbH_, die eine Dating- und Meeting-Plattform betreibt.
-Ihr Unternehmen soll die Dating-App der Kundin weiterentwickeln. Leider erfolgte die Trennung vom vorigen IT-Dienstleister im Streit und nicht reibungsfrei, sodass die Kundin keinen Zugriff auf die bestehenden Datenbanken hat. Es liegt lediglich ein Datenbank-Dump in Form einer Excel-Datei vor, die die Inhalte aller Tabellen erfasst. Außerdem gibt es einen Backup einer MongoDB sowie eine XML-Datei mit einigen Daten.
+![Ausschnitt aus „Tea with friends, and one must wear one's finest hat!“ (Public Domain)](./images/tea-with-friends.png)
 
-![Ausschnitt aus "Tea with friends, and one must wear one's finest hat!" (public domain)](./images/tea-with-friends.png)
-Ihr Team ist für die Datenanalyse und den Entwurf der neuen Datenbank sowie die Migration in neue Tabellen zuständig. Die eigentliche App wird von einem anderen Team betreut.
+## Euer Arbeitsauftrag
 
-Ausgangslage ist der vorliegende Export der Datenbank als Excel-Tabelle. Um Problemen beim Ändern, Löschen und Einfügen von Datensätzen vorzubeugen, legt die Kundin sehr viel Wert darauf, im Vorfeld der Migration ein ausgefeiltes konzeptuelles Datenmodell zu erhalten. Anhand des Datenmodells soll die Kundin im Anschluss hinsichtlich der Wahl eines logischen Datenmodells und schließlich hinsichtlich eines Datenbankmanagementsystems beraten werden. Um nicht ein weiteres Mal ohne aussagekräftige Dokumente dazustehen, wünscht sich die Kundin zudem eine geeignete Dokumentation der einzelnen Entwurfsphasen und der reproduzierbaren Zwischenschritte.
+Ihr arbeitet in drei Akten. Akt 1 und Akt 2 sind unten vollständig beschrieben. Für jeden aktuell
+freigegebenen Akt erzeugt ihr einen **reproduzierbaren Import aus einer leeren Datenbank** und
+prüft ihn gegen die dort genannten Anforderungen. Die Tabellen hinter den geforderten Views dürft
+ihr selbst entwerfen.
 
-Daneben existieren auch Daten in einer NoSql-Datenbank (MongoDB). Hier sind Likes und Nachrichten hinterlegt, die aus einer anderen App stammen. Diese sollen ebenfalls in die neue Datenbank migriert werden.
+- Versioniert SQL, Importcode, eigene Datenprüfungen und kurze Markdown-Dokumentationen mit Git.
+- Erstellt physische Modelle beziehungsweise DDL für die aufgenommenen Quelldaten und das
+  PostgreSQL-Zielsystem.
+- Dokumentiert Annahmen, Transformationsregeln, Konfliktentscheidungen und nicht übernommene
+  Datensätze nachvollziehbar.
+- Der Browser-Prüfstand gibt formatives Feedback. Für ein Akt-Gate zählt ausschließlich der
+  CLI-Repro-Lauf aus einer leeren Datenbank.
+- Haltet ihr ein rotes Ergebnis für fachlich falsch, eskaliert es mit Quelle, betroffenem
+  Datensatz und Begründung an die Lehrkraft.
 
-Desweiteren sind Hobbydaten in einer XML-Datei vorhanden und sollen ebenfalls migriert werden.
+Die Begleit-Website führt euch durch die Übergänge:
 
-Alle genutzten SQL-Befehle und der Code für den Import sollen mit git versioniert werden. Dokumentieren Sie die durchgeführten Schritte bzw. die erstellten Diagramme, etc. jeweils in einer kurzen Markdown-Datei.
+**[LetsMeet-Projektbegleitung öffnen](https://station.heidelab.de/letsmeet/)**
 
-Das Zielsystem soll ein Postgres in einem Docker-Container sein. Der Docker-Container wurde bereits in der [compose.yml](compose.yml) konfiguriert und kann mit *docker compose up* gestartet werden.
+Sie speichert euren Stand nur lokal im Browser. Sie ist keine Abgabe und prüft weder Datenbank noch
+ER-Diagramm selbst.
 
-### Auszug der Daten - Excel
+## Technischer Start
 
-Alle Daten finden sich in der Excel-Datei let_s-meet-db-dump.xlsx (Im Projektordner). Der Aufbau der Daten lässt sich an folgendem Schema erkennen:
-
-* Spalte 1: Name kommagetrennt: Vorname, Nachname
-
-* Spalte 2: Adresse kommagetrennt (Straße / Nr. durch Leerzeichen)
-
-* Spalte 3: Telefonnummern, ggf. kommagetrennt
-
-* Spalte 4: fünf Hobbies, getrennt durch Semikolon. Die Priorität des jeweiligen Hobbys (0-100) wird zwischen zwei Prozentzeichen angegeben.
-
-* Spalte 5: E-Mail-Adresse
-
-* Spalte 6: Gelesenes Geschlecht  (m / w / nicht binär)
-
-* Spalte 7: Interessiert an Geschlecht (m/w/nicht binär, Mehrfachnennung möglich)
-
-* Spalte 8: Geburtsdatum
-
-|Nachname, Vorname	|Straße Nr, PLZ, Ort	|Telefon	|Hobby1 %Prio1%; Hobby2 %Prio2%; Hobby3 %Prio3%; Hobby4 %Prio4%; Hobby5 %Prio5%;	|E-Mail	|Geschlecht	|Interessiert an| Geburtsdatum|
-|---|---|---|---|---|---|---|---|
-|Gehlen, Ursula	|Papendamm 27, 52062, Aachen	|(0251) 340233	|Gäste einladen %91%; Geschenke machen %75%; Für sich selbst Dinge einkaufen %75%; Eine Blume oder Pflanze sehen oder daran riechen %21%; Leger gekleidet sein %84%; |ursula.gehlen@d-ohnline.te	|w	|m| 13.05.1983|
-|Gehrmann, Kai	|Parkstr 6, 52072, Aachen	|(0251) 376775	|Etwas neuartig und originell machen %45%; Ausgiebig frühstücken %40%; An technischen Dingen arbeiten (Fahrzeuge, Hausgeräte usw.) %49%; 	|kai.gehrmann@autluuk.te	|m	|w|11.06.1991|
-
-### **Auszug der Daten - MongoDB**
-
-Die MongoDB-Datenbank speichert Benutzerdaten in der Sammlung `users`. Hier ein Beispiel eines Dokuments:
-
-```json
-{
-    "_id": "ansgar.kötter@web.ork",
-    "name": "Kötter, Ansgar",
-    "phone": "03935 / 75289",
-    "friends": [],
-    "likes": [
-        {
-            "liked_email": "helmut.bußmann@autluuk.kom",
-            "status": "pending",
-            "timestamp": "2024-03-17 07:39:29"
-        }
-    ],
-    "messages": [
-        {
-            "conversation_id": 36,
-            "receiver_email": "christian.pollack@ge-em-ix.te",
-            "message": "Ich habe eine spannende Idee, die ich mit dir teilen möchte.",
-            "timestamp": "2024-09-22 07:40:31"
-        }
-    ],
-    "createdAt": "2023-03-08T00:00:00",
-    "updatedAt": "2023-10-20T00:00:00"
-}
-```
-### *Auszug der Daten - XML*
-Die XML-Datei speichert Hobbys der Benutzerinnen. Ein Beispiel für einen Benutzer in der XML-Datei sieht wie folgt aus:
-```xml
-<users>
-    <user>
-        <email>ursula.gehlen@d-ohnline.te</email>
-        <name>Gehlen, Ursula</name>
-        <hobby>Kochen</hobby>
-        <hobby>Gartenarbeit</hobby>
-        <hobby>Fotografie</hobby>
-    </user>
-</users>
-```
-
-
-### Erweiterung der Datenbank
-
-Neben dem Import soll die Datenbank für folgende Anwendungsfälle eine Struktur bieten.
-
-- Benutzer*innen können die Hobbys priorisieren, die sie an anderen interessieren (0-100) bzw. die sie ausgesprochen nicht mögen (-100 - 0 )
-
-- Benutzer*innen können andere Benutzer*innen auf ihre „Freundesliste“ setzen.
-
-- Benutzer*innen haben ein Profilbild. Dieses wird direkt in der Datenbank gespeichert (`BLOB`).
-
-- Neben einem Profilbild können Benutzer*innen weitere Fotos hochladen oder verlinken.
-
-Es wurde das unten abgedruckte Anwendungsfalldiagramm erstellt. Diese Anwendungsfälle sollen bereits im Datenmodell vorgesehen werden. Für jeden Use-Case soll ein passendes SQL-Query beispielhaft erstellt werden.
-
-![Anwendungsfalldiagramm für die Let's Meet-DB](images/use-case.png)
-
-## Hinweise und Anforderungen an die Realisierung
-
-Kleingruppen sollen die Anpassungen planen, durchführen, jedes Zwischenergebnis testen und alle zugrundeliegenden Schritte dokumentieren. 
-
-Die folgenden Schritte sollen ausgeführt und im _git_-Repository versioniert und dokumentiert werden:
-
-* **Konzeptuelles Datemmodell**: Analyse der bestehenden Daten in der Excel-Tabelle und MongoDB und Extrahierung eines konzeptuellen Datenmodells (z.B. ER-Diagramm) der Zieldatenbank.
-
-* **Logisches Datenmodell**: Anwenden der Transformationsregeln, um ein konzeptuellen Modell (Entity Relationship Model) in ein logisches Modell (Relationenmodell) umzuwandeln. Berücksichtigen Sie dabei die Regeln der [*Datenbanknormalisierung* ](normalization.md) und stellen Sie sicher, dass die Datenbank in der dritten Normalform ist.
-
-* **Datenschutz**: Was ist erforderlich, um die betreffenden Daten verarbeiten und speichern zur dürfen? Aus Sicht des Datenschutzes: welche unterschiedlichen Arten von Daten liegen hier vor und wie müssen sie demnach geschützt werden? Welche Maßnahmen müssen ergriffen werden?
-
-* **Erstellung des physischen Datenmodells** für die Ursprungsdaten und die Zieldatenbank Postgres (SQL-DDL, `CREATE TABLE...`)
-
-* **Erstellung eines Importskriptes I** für die Daten aus der Excel-Datei (Programmiersprache Ihrer Wahl) (SQL-DML `INSERT INTO ...`)
-
-* **Erstellung eines Importskriptes II** für die Daten aus der MongoDB (Programmiersprache Ihrer Wahl) (SQL-DML `INSERT INTO ...`)
-
-* **Erstellung eines Importskriptes III** für die Daten aus der XML-Datei (Programmiersprache Ihrer Wahl) (SQL-DML `INSERT INTO ...`)
-
-* **Erstellung von "Tests"** Nach der Migration der Daten sollen alle Zwischenergebnisse durch SQL-Abfragen überprüft werden. Suchen Sie geeignete Daten um zu überprüfen, ob der Import erfolgreich war und erstellen Sie Unit-Tests, die testen, ob alles geklappt hat.
-
-
-
-# Technische Hinweise für die Realisierung
-
-## Docker-Setup
-
-Die gesamte Infrastruktur ist so konfiguriert, dass sie mit Docker Compose gestartet werden kann. Das System enthält zwei zentrale Dienste: **PostgreSQL** als Ziel-Datenbank und **MongoDB** als Quelle für bestimmte Daten.
-
-### Compose-Datei: `compose.yml`
-
-#### PostgreSQL-Dienst
-- **Container-Name:** `lf8_lets_meet_postgres_container`
-- **Image:** `postgres:16.4`
-- **Volumes:** Persistente Speicherung der PostgreSQL-Daten unter `lf8_lets_meet_postgres_data:/var/lib/postgresql/data`
-- **Umgebungsvariablen:**
-    - `POSTGRES_DB`: Name der Datenbank (`lf8_lets_meet_db`)
-    - `POSTGRES_USER`: Benutzername für den Zugriff (`user`)
-    - `POSTGRES_PASSWORD`: Passwort für den Zugriff (`secret`)
-- **Ports:** Der Dienst ist auf dem lokalen Port `5432` verfügbar.
-
-#### MongoDB-Dienst
-- **Container-Name:** `lf8_lets_meet_mongodb_container`
-- **Image:** `berndheidemann/letsmeet-mongodb:latest`
-- **Volumes:** Persistente Speicherung der MongoDB-Daten unter `lf8_lets_meet_mongodb_data:/data/db`
-- **Umgebungsvariablen:**
-    - `MONGO_INITDB_DATABASE`: Name der initialen Datenbank (`LetsMeet`)
-- **Ports:** Der Dienst ist auf dem lokalen Port `27017` verfügbar.
-
-### Starten der Dienste
-Führen Sie den folgenden Befehl im Projektordner aus, um die Dienste zu starten:
 ```bash
-docker compose up
+docker compose up -d
 ```
 
-- Nach dem Starten läuft die PostgreSQL-Datenbank auf `localhost:5432`.
-- Die MongoDB-Datenbank ist auf `localhost:27017` erreichbar.
+Danach sind erreichbar:
 
-### Zugriff auf die Datenbanken
-#### PostgreSQL
-Sie können mit jedem SQL-Client (z. B. pgAdmin, DBeaver) oder direkt mit `psql` auf die Datenbank zugreifen:
+- PostgreSQL: `localhost:5432`, Datenbank `lf8_lets_meet_db`
+- MongoDB: `localhost:27017`, Datenbank `LetsMeet`
+- Kundinnen-App und Prüfstand: [http://localhost:3611](http://localhost:3611)
+
+PostgreSQL-Zugang: Benutzer `user`, Passwort `secret`.
+
+Die Kundinnen-App startet mit Vertragsversion V1. Wenn ein späterer Akt eine neue Vertragsversion
+freigibt, startet ihr nur diesen Service mit der dort genannten Version neu. Beispiel für V2:
+
 ```bash
-psql -h localhost -U user -d lf8_lets_meet_db
+LETSMEET_CONTRACT_VERSION=V2 docker compose up -d --force-recreate kundinnen_app
 ```
-**Passwort:** `secret`
 
-#### MongoDB
-Verwenden Sie `mongo`-Clients oder GUI-Tools wie MongoDB Compass. Standard-URI:
+PowerShell:
+
+```powershell
+$env:LETSMEET_CONTRACT_VERSION="V2"
+docker compose up -d --force-recreate kundinnen_app
 ```
+
+Die Check-Historie und technische Gate-Artefakte liegen im Volume
+`lf8_lets_meet_check_history` und bleiben beim Container-Neustart erhalten.
+
+---
+
+# Akt 1 — Walking Skeleton aus Excel
+
+## Ausgangslage
+
+Quelle ist [`Lets Meet DB Dump.xlsx`](./Lets%20Meet%20DB%20Dump.xlsx). Darin stehen Name,
+Adresse, Telefon, fünf priorisierte Hobbys, E-Mail-Adresse, Geschlecht, Interessen und
+Geburtsdatum in teilweise zusammengesetzten Feldern.
+
+## Auftrag
+
+1. Profiliert die Quelle und haltet auffällige Formate, Mehrfachwerte und offene Fragen fest.
+2. Erstellt das minimale physische Modell und einen Import aus einer **leeren** Datenbank.
+3. Stellt die folgende View bereit. Eure internen Tabellen und Joins bleiben eure Entscheidung.
+4. Öffnet die Kundinnen-App und untersucht sichtbare Folgen eurer Importentscheidungen.
+5. Schreibt eigene SQL-Abfragen oder automatisierte Tests für eure zentralen Importannahmen.
+6. Dokumentiert Importbefehl, Testergebnisse und bekannte Grenzen.
+
+## Migrationsvertrag V1
+
+```sql
+-- Pflicht-View, Spaltennamen und -typen exakt:
+-- migration_users(email text, first_name text, last_name text,
+--                 birth_date date, postal_code text, city text)
+
+CREATE VIEW migration_users AS
+SELECT ... FROM ...;
+```
+
+Regeln:
+
+- eine Zeile pro migrierter Person;
+- `email` eindeutig und nicht leer;
+- keine Platzhalter für misslungene Zeilen — was nicht importiert ist, fehlt sichtbar;
+- Textvergleich nach Unicode-NFC und in V1 quelltreu einschließlich äußerer Leerzeichen;
+- `city` enthält den vollständigen Ortsnamen aus der Quelle, auch wenn darin ein Komma vorkommt.
+
+## V1-Repro-Gate
+
+Reproduziert euren Excel-Import in einer leeren Datenbank und führt aus:
+
+```bash
+docker compose run --rm -e CONTRACT_VERSION=V1 kundinnen_app \
+  node server/dist/cli.js
+```
+
+Nur Exit-Code `0` ist ein grünes V1-Gate. Erklärt V1 anschließend in der Begleit-Website als grün;
+dort öffnet sich Akt 2.
+
+---
+
+# Akt 2 — Zielmodell und MongoDB
+
+## Modellierungsauftrag
+
+Bearbeitet zuerst die in der Begleit-Website angezeigten ERD-Trainingsfälle. Öffnet danach dort die
+LetsMeet-Modellierungsstation, entwickelt ER-Diagramm und relationales Schema und registriert eure
+vollständige Share-URL. Sichert dieselbe URL zusätzlich in eurer Projektdokumentation.
+
+Berücksichtigt dabei:
+
+- Transformation ins Relationenmodell und dritte Normalform; siehe
+  [`normalization.md`](./normalization.md);
+- priorisierte und ausdrücklich nicht gemochte Hobbys (`-100` bis `100`);
+- Freundeslisten;
+- ein direkt gespeichertes Profilbild sowie weitere hochgeladene oder verlinkte Fotos;
+- Datenschutz: Datenarten, Rechtsgrundlage, Schutzbedarf und technische/organisatorische
+  Maßnahmen;
+- je Anwendungsfall eine beispielhafte SQL-Abfrage;
+- physische Modelle und SQL-DDL sowohl für die aufgenommenen Quelldaten als auch für das
+  PostgreSQL-Zielsystem;
+- eigene Tests für Mengen, Eindeutigkeit, Referenzen und zentrale Transformationsregeln — der
+  Kundinnen-Checker ergänzt diese, ersetzt sie aber nicht.
+
+![Anwendungsfalldiagramm für die LetsMeet-Datenbank](./images/use-case.png)
+
+## MongoDB-Quelle
+
+Das Backup läuft bereits im Compose-Service `mongodb_for_lf8`. Die Sammlung `users` enthält
+ergänzende Profildaten sowie gerichtete Likes und Nachrichten. Analysiert insbesondere
+verschachtelte Datensätze, Referenzen, Mehrfachwerte und Widersprüche zur Excel-Quelle. Holt für
+offene fachliche Konflikte eine Kundinnenentscheidung ein und dokumentiert die angewandte Regel.
+
+## Migrationsvertrag V2
+
+V2 ersetzt den V1-Spaltensatz und gilt kumulativ:
+
+```sql
+-- Pflicht-Views, Namen und Typen exakt:
+-- migration_users(email text, first_name text, last_name text, birth_date date,
+--                 postal_code text, city text, phone text, gender text)
+-- migration_user_interests(email text, interest_code text)
+-- migration_user_hobbies(email text, hobby_name text, priority integer, source text)
+-- migration_likes(liker_email text, liked_email text, status text, liked_at timestamp)
+-- migration_messages(sender_email text, receiver_email text, body text,
+--                    sent_at timestamp, conversation_id integer)
+```
+
+Regeln:
+
+- Eine Zeile je Sachverhalt. Mehrere Interessen ergeben mehrere Zeilen; dasselbe Hobby aus
+  derselben Quelle erscheint nur einmal.
+- `source` dokumentiert die Herkunft einer Hobbyzuordnung; in Akt 2 ist sie `excel`.
+- Likes und Nachrichten sind gerichtet: Absender beziehungsweise auslösende Person stehen links.
+- Bei widersprüchlichen Kontaktdaten gilt die eingeholte und dokumentierte Kundinnenentscheidung.
+- Vergleichssemantik wie in V1; Zeitpunkte werden typisiert und auf die Sekunde genau verglichen.
+
+Startet die Anzeige-App für Akt 2 neu:
+
+```bash
+LETSMEET_CONTRACT_VERSION=V2 docker compose up -d --force-recreate kundinnen_app
+```
+
+## V2-Repro-Gate
+
+Reproduziert Excel- und MongoDB-Import gemeinsam in einer leeren Datenbank:
+
+```bash
+docker compose run --rm -e CONTRACT_VERSION=V2 kundinnen_app \
+  node server/dist/cli.js
+```
+
+Nur Exit-Code `0` ist ein grünes V2-Gate. Registriert vorher eure ERD-Share-URL und erklärt V2
+dann in der Begleit-Website als grün. Danach folgt die nächste Anweisung.
+
+---
+
+# Akt 3 — Fortsetzung
+
+Beginnt Akt 3 erst, wenn euch der nächste Auftrag angezeigt wird. Bis dahin sind ausschließlich
+Akt 1 und Akt 2 verbindlich.
+
+---
+
+# Erwartete Repository-Artefakte
+
+Eine mögliche Struktur:
+
+```text
+results/
+  quellenanalyse.md
+  konzeptuelles_modell.md
+  logisches_modell.md
+  physische_modelle.md
+  datenschutz.md
+  konfliktentscheidungen.md
+  scripts/
+    create_tables.sql
+    import_excel.*
+    import_mongodb.*
+    tests/
+```
+
+Verbindlich ist nicht der Dateiname, sondern dass ein anderes Team eure Datenbank aus einer leeren
+PostgreSQL-Instanz reproduzieren, eure Entscheidungen nachvollziehen und die Akt-Gates erneut
+ausführen kann.
+
+## Datenbankzugriff in Werkzeugen
+
+PostgreSQL-Verbindungsdaten für DBeaver, SQLTools oder `psql`:
+
+```text
+Host: localhost
+Port: 5432
+Datenbank: lf8_lets_meet_db
+Benutzer: user
+Passwort: secret
+```
+
+MongoDB-Verbindungs-URI für Compass oder die VS-Code-Erweiterung:
+
+```text
 mongodb://localhost:27017/LetsMeet
 ```
 
----
+## Lokalen Datenstand vollständig zurücksetzen
 
-## Zugriff auf MongoDB in VS Code
+```bash
+docker compose down -v
+```
 
-Um auf die MongoDB in VS Code zuzugreifen, benötigen Sie die MongoDB-Erweiterung:
-1. Installieren Sie die Erweiterung **"MongoDB for VS Code"** aus dem VS Code Marketplace.
-2. Öffnen Sie die "MongoDB"-Ansicht (Strg+Shift+P → `MongoDB: Open Overview`).
-3. Fügen Sie eine neue Verbindung hinzu. Verwenden Sie die folgende Verbindungs-URI:
-   ```
-   mongodb://localhost:27017
-   ```
-4. Nach der Verbindung können Sie in der Ansicht die `LetsMeet`-Datenbank durchsuchen, Abfragen durchführen und Dokumente ansehen.
+**Achtung:** Dieser Befehl löscht PostgreSQL, MongoDB, Check-Historie und Gate-Artefakte lokal. Nutzt
+ihn nur, wenn ihr wirklich wieder bei einer leeren Infrastruktur beginnen möchtet. Euer Git-Stand
+bleibt erhalten.
 
 ---
 
-## Zugriff auf PostgreSQL in VS Code
-
-1. Installieren Sie die Erweiterung **"SQLTools"** aus dem VS Code Marketplace.
-2. Gehen Sie in die SQLTools-Verwaltung und erstellen Sie eine neue Verbindung:
-    - **DB-Typ:** PostgreSQL
-    - **Host:** `localhost`
-    - **Port:** `5432`
-    - **Benutzername:** `user`
-    - **Passwort:** `secret`
-    - **Datenbankname:** `lf8_lets_meet_db`
-3. Nach der Einrichtung können Sie SQL-Abfragen direkt aus VS Code ausführen.
-
----
-
-## Dokumentation und Versionierung
-
-- Alle SQL-Skripte, Import-Skripte und Modelle sollen im `git`-Repository versioniert werden.
-- Verwenden Sie für die Dokumentation Markdown-Dateien. Empfohlene Struktur:
-  ```
-  results/
-    konzeptuelles_modell.md
-    logisches_modell.md
-    datenschutz.md
-    scripts/
-      create_tables.sql
-      import_excel script
-      import_mongodb script
-      import_xml script
-      unit-test.datei
-  ```
-
----
-
+**Qualitätshinweis:** Die Lernumgebung wurde technisch, automatisiert und mit simulierten Personas
+geprüft. Vor dem erstmaligen Einsatz in einer Lerngruppe ist weiterhin ein One-to-One-Pilot mit
+2–3 Auszubildenden vorgesehen.
