@@ -12,12 +12,12 @@ Anzeige-App der Kundin wieder versorgen kann.
 Ihr arbeitet in drei Akten. Akt 1 und Akt 2 sind unten vollständig beschrieben. Für jeden aktuell
 freigegebenen Akt baut ihr die Datenbank mit euren Skripten **aus einer leeren PostgreSQL-Datenbank neu auf**
 und prüft das Ergebnis. Ein anderes Team muss denselben Aufbau wiederholen können — genau das ist
-mit einem reproduzierbaren Import gemeint. Die Tabellen hinter den geforderten Views dürft ihr
-selbst entwerfen.
+mit einem reproduzierbaren Import gemeint. Die Tabellen hinter den geforderten
+Datenbankansichten (Views) dürft ihr selbst entwerfen.
 
 - Versioniert SQL, Importcode, eigene Datenprüfungen und kurze Markdown-Dokumentationen mit Git.
-- Erstellt physische Modelle beziehungsweise DDL für die aufgenommenen Quelldaten und das
-  PostgreSQL-Zielsystem.
+- Erstellt physische Modelle und die zugehörigen SQL-Anweisungen zur Definition der
+  Datenbankstruktur (DDL) für die aufgenommenen Quelldaten und das PostgreSQL-Zielsystem.
 - Dokumentiert Annahmen, Transformationsregeln, Konfliktentscheidungen und nicht übernommene
   Datensätze nachvollziehbar.
 - Der Prüfstand in der Kundinnen-App gibt euch Hinweise zum Weiterarbeiten. Für den Abschluss eines
@@ -125,9 +125,10 @@ bestanden. Setzt danach in der Begleit-Website den Haken für Akt 1; dort öffne
 
 ## Modellierungsauftrag
 
-Bearbeitet zuerst die in der Begleit-Website angezeigten ERD-Trainingsfälle. Öffnet danach dort die
-LetsMeet-Modellierungsstation, entwickelt ER-Diagramm und relationales Schema und registriert eure
-vollständige Share-URL. Sichert dieselbe URL zusätzlich in eurer Projektdokumentation.
+Bearbeitet zuerst die in der Begleit-Website angezeigten Trainingsfälle für
+Entity-Relationship-Diagramme (ERD). Öffnet danach dort die LetsMeet-Modellierungsstation,
+entwickelt ER-Diagramm und relationales Schema und registriert die vollständige Freigabe-URL
+(Share-URL) eures Modells. Sichert dieselbe URL zusätzlich in eurer Projektdokumentation.
 
 Berücksichtigt dabei:
 
@@ -139,8 +140,8 @@ Berücksichtigt dabei:
 - Datenschutz: Datenarten, Rechtsgrundlage, Schutzbedarf und technische/organisatorische
   Maßnahmen;
 - je Anwendungsfall eine beispielhafte SQL-Abfrage;
-- physische Modelle und SQL-DDL sowohl für die aufgenommenen Quelldaten als auch für das
-  PostgreSQL-Zielsystem;
+- physische Modelle und die zugehörige DDL sowohl für die aufgenommenen Quelldaten als auch für
+  das PostgreSQL-Zielsystem;
 - eigene Tests für Mengen, Eindeutigkeit, Referenzen und zentrale Transformationsregeln — der
   Kundinnen-Checker ergänzt diese, ersetzt sie aber nicht.
 
