@@ -37,7 +37,7 @@ services:
 
   kundinnen_app:
     container_name: lf8_lets_meet_kundinnen_app
-    image: berndheidemann/letsmeet-kundinnen-app:v3-pilot-2026-08-10
+    image: berndheidemann/letsmeet-kundinnen-app:v3-simfix-2026-08-10
     ports:
       - "3611:3611"
     volumes:

@@ -9,7 +9,8 @@ Anzeige-App der Kundin wieder versorgen kann.
 
 ## Euer Arbeitsauftrag
 
-Ihr arbeitet in drei Akten. Akt 1 und Akt 2 sind unten vollständig beschrieben. Für jeden aktuell
+Ihr arbeitet in drei Akten. Akt 1 und Akt 2 sind unten vollständig beschrieben; die Begleit-Website
+gibt Akt 2 erst frei, wenn ihr Akt 1 abgeschlossen habt. Für jeden aktuell
 freigegebenen Akt baut ihr die Datenbank mit euren Skripten **aus einer leeren PostgreSQL-Datenbank neu auf**
 und prüft das Ergebnis. Ein anderes Team muss denselben Aufbau wiederholen können — genau das ist
 mit einem reproduzierbaren Import gemeint. Die Tabellen hinter den geforderten
@@ -98,6 +99,10 @@ Quelle ist [`Lets Meet DB Dump.xlsx`](./Lets%20Meet%20DB%20Dump.xlsx). Darin ste
 Adresse, Telefon, fünf priorisierte Hobbys, E-Mail-Adresse, Geschlecht, Interessen und
 Geburtsdatum in teilweise zusammengesetzten Feldern.
 
+Für Akt 1 ist die Excel-Datei eure einzige Quelle. Die ebenfalls im Repository liegende Datei
+`Lets_Meet_Hobbies.xml` gehört zu einer späteren Nachlieferung und bleibt vorerst unberührt; die
+MongoDB kommt in Akt 2 dazu.
+
 ## Auftrag
 
 1. Profiliert die Quelle und haltet auffällige Formate, Mehrfachwerte und offene Fragen fest.
@@ -139,12 +144,33 @@ Regeln:
 
 ## Abschluss von Akt 1: Neuaufbau prüfen
 
-Baut euren Excel-Import mit euren Skripten in einer leeren Datenbank neu auf. Führt danach diesen
-Prüfbefehl im Terminal aus:
+Für den Abschluss zählt nicht der Zustand eurer Datenbank, sondern dass eure Skripte ihn aus dem
+Nichts erzeugen können. Der Ablauf ist deshalb immer derselbe: leeren, importieren, prüfen.
+
+### Schritt 1 — Datenbank leeren
+
+Löscht alle Tabellen und Views im Schema `public`:
 
 ```bash
-docker compose run --rm -e CONTRACT_VERSION=V1 kundinnen_app \
-  node server/dist/cli.js
+docker compose exec postgres_for_lf8_starter psql -U user -d lf8_lets_meet_db -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
+```
+
+Danach ist die Datenbank leer, euer Prüfverlauf bleibt aber erhalten. Der weiter unten beschriebene
+Befehl `docker compose down -v` leert ebenfalls, löscht dabei jedoch zusätzlich den Verlauf und die
+MongoDB — für den Neuaufbau vor einem Prüflauf braucht ihr ihn nicht.
+
+### Schritt 2 — Import laufen lassen
+
+Führt eure eigenen Importskripte aus, so wie ein anderes Team es auch tun würde.
+
+### Schritt 3 — Prüfen
+
+Alle `docker compose`-Befehle laufen in dem Verzeichnis, in dem `compose.yml` liegt — also im
+Wurzelverzeichnis eures geklonten Projekts. Meldet Docker `no configuration file provided`, seid
+ihr im falschen Verzeichnis.
+
+```bash
+docker compose run --rm -e CONTRACT_VERSION=V1 kundinnen_app node server/dist/cli.js
 ```
 
 Endet der Befehl mit Exit-Code `0` — also ohne Fehler —, ist die Abschlussprüfung für Akt 1
@@ -230,12 +256,11 @@ LETSMEET_CONTRACT_VERSION=V2 docker compose up -d --force-recreate kundinnen_app
 
 ## Abschluss von Akt 2: Gemeinsamen Neuaufbau prüfen
 
-Baut Excel- und MongoDB-Import gemeinsam in einer leeren Datenbank neu auf. Führt danach diesen
-Prüfbefehl im Terminal aus:
+Leert die Datenbank wie in Akt 1 beschrieben, baut Excel- und MongoDB-Import gemeinsam neu auf und
+führt danach diesen Prüfbefehl im Terminal aus:
 
 ```bash
-docker compose run --rm -e CONTRACT_VERSION=V2 kundinnen_app \
-  node server/dist/cli.js
+docker compose run --rm -e CONTRACT_VERSION=V2 kundinnen_app node server/dist/cli.js
 ```
 
 Endet der Befehl mit Exit-Code `0` — also ohne Fehler —, ist die Abschlussprüfung für Akt 2
@@ -274,6 +299,10 @@ Verbindlich ist nicht der Dateiname. Ein anderes Team muss eure Datenbank mit eu
 einer leeren PostgreSQL-Datenbank neu aufbauen, eure Entscheidungen nachvollziehen und die Prüfbefehle für
 die Akte erneut ausführen können.
 
+---
+
+# Werkzeuge und Betrieb
+
 ## Datenbankzugriff in Werkzeugen
 
 PostgreSQL-Verbindungsdaten für DBeaver, SQLTools oder `psql`:
@@ -298,12 +327,18 @@ landet ihr in der bereits laufenden Datenbank eures Rechners: Eure Tabellen und 
 dann dort, das Werkzeug zeigt alles grün, und der Prüfstand meldet trotzdem weiter
 `Keine View migration_users`.
 
-## Lokalen Datenstand vollständig zurücksetzen
+## Alles zurücksetzen, auch MongoDB und Prüfverlauf
 
 ```bash
 docker compose down -v
 ```
 
 **Achtung:** Dieser Befehl löscht eure lokalen PostgreSQL- und MongoDB-Daten sowie den Verlauf der
-Prüfläufe. Nutzt ihn nur, wenn ihr wirklich wieder mit leeren Datenbanken beginnen möchtet. Euer
-Git-Stand bleibt erhalten.
+Prüfläufe. Euer Git-Stand bleibt erhalten.
+
+Für den normalen Neuaufbau vor einem Prüflauf braucht ihr ihn **nicht** — dafür genügt das Leeren
+des Schemas aus „Abschluss von Akt 1". Dieser Befehl hier ist der große Reset, wenn ihr auch die
+MongoDB und den Prüfverlauf loswerden wollt.
+
+Nicht zu verwechseln mit dem Knopf „Lokalen Stand zurücksetzen" auf der Begleit-Website: Der
+löscht nur eure dort gesetzten Haken im Browser und rührt keine Datenbank an.
