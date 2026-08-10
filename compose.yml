@@ -17,7 +17,7 @@ services:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: secret
     ports:
-      - "5432:5432"
+      - "${LETSMEET_PG_PORT:-5432}:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U user -d lf8_lets_meet_db"]
       interval: 5s
@@ -31,7 +31,7 @@ services:
     volumes:
       - lf8_lets_meet_mongodb_data:/data/db
     ports:
-      - "27017:27017"
+      - "${LETSMEET_MONGO_PORT:-27017}:27017"
     environment:
       MONGO_INITDB_DATABASE: LetsMeet
 

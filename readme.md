@@ -49,24 +49,25 @@ PostgreSQL-Zugang: Benutzer `user`, Passwort `secret`.
 ### Wenn ein Port schon belegt ist
 
 Scheitert `docker compose up -d` mit einer Meldung wie `port is already allocated` oder
-`address already in use`, läuft auf eurem Rechner bereits ein Dienst auf Port `5432` (PostgreSQL)
-oder `27017` (MongoDB). Ihr müsst dann nichts deinstallieren: Legt neben `compose.yml` eine Datei
-`compose.override.yml` an, die nur den abweichenden Host-Port setzt. Docker Compose liest sie
-automatisch mit.
+`address already in use`, läuft auf eurem Rechner bereits ein anderes Programm auf Port `5432`
+(PostgreSQL) oder `27017` (MongoDB). Ihr müsst dann nichts deinstallieren: Legt neben `compose.yml`
+eine Datei `.env` an und tragt dort einen freien Port ein. Docker Compose liest sie automatisch.
 
-```yaml
-services:
-  postgres_for_lf8_starter:
-    ports:
-      - "55432:5432"
-  mongodb_for_lf8:
-    ports:
-      - "57017:27017"
+```bash
+LETSMEET_PG_PORT=55432
+LETSMEET_MONGO_PORT=57017
 ```
 
-Ihr verbindet euch danach von außen über den linken Port (also `localhost:55432`). Der Prüfstand
-läuft im Docker-Netz weiter über den unveränderten rechten Port und ist von der Änderung nicht
-betroffen. Die Datei gehört euch — nehmt sie in Git auf, wenn ihr sie braucht.
+Prüft das Ergebnis vor dem Start mit `docker compose config` — dort muss der neue Port stehen und
+der alte verschwunden sein. Die `.env` gilt nur für euren Rechner; nehmt sie nicht mit ins
+Git-Repository, sonst erben eure Teamkolleginnen und -kollegen fremde Ports.
+
+Ihr verbindet euch danach von außen über den neuen Port, also `localhost:55432` statt
+`localhost:5432`. Innerhalb des Docker-Netzes bleibt alles unverändert; der Prüfstand ist von der
+Änderung nicht betroffen.
+
+**Wichtig:** Der Konflikt entsteht durch ein anderes Programm auf eurem Rechner, nicht durch eure
+Daten. `docker compose down -v` hilft dagegen nicht — es löscht nur euren eigenen Datenstand.
 
 Die Kürzel V1, V2 und V3 bezeichnen die technischen Datenverträge für Akt 1, Akt 2 und Akt 3.
 In Befehlen müsst ihr diese Kürzel genau so verwenden. Die Kundinnen-App startet mit V1. Wenn ein
@@ -285,6 +286,12 @@ MongoDB-Verbindungs-URI für Compass oder die VS-Code-Erweiterung:
 ```text
 mongodb://localhost:27017/LetsMeet
 ```
+
+Habt ihr wegen eines Portkonflikts eine `.env` angelegt, gelten hier eure geänderten Ports —
+also zum Beispiel `55432` statt `5432`. Verbindet ihr euch versehentlich auf den alten Port,
+landet ihr in der bereits laufenden Datenbank eures Rechners: Eure Tabellen und Views entstehen
+dann dort, das Werkzeug zeigt alles grün, und der Prüfstand meldet trotzdem weiter
+`Keine View migration_users`.
 
 ## Lokalen Datenstand vollständig zurücksetzen
 
