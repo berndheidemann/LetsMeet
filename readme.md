@@ -46,6 +46,28 @@ Danach sind erreichbar:
 
 PostgreSQL-Zugang: Benutzer `user`, Passwort `secret`.
 
+### Wenn ein Port schon belegt ist
+
+Scheitert `docker compose up -d` mit einer Meldung wie `port is already allocated` oder
+`address already in use`, läuft auf eurem Rechner bereits ein Dienst auf Port `5432` (PostgreSQL)
+oder `27017` (MongoDB). Ihr müsst dann nichts deinstallieren: Legt neben `compose.yml` eine Datei
+`compose.override.yml` an, die nur den abweichenden Host-Port setzt. Docker Compose liest sie
+automatisch mit.
+
+```yaml
+services:
+  postgres_for_lf8_starter:
+    ports:
+      - "55432:5432"
+  mongodb_for_lf8:
+    ports:
+      - "57017:27017"
+```
+
+Ihr verbindet euch danach von außen über den linken Port (also `localhost:55432`). Der Prüfstand
+läuft im Docker-Netz weiter über den unveränderten rechten Port und ist von der Änderung nicht
+betroffen. Die Datei gehört euch — nehmt sie in Git auf, wenn ihr sie braucht.
+
 Die Kürzel V1, V2 und V3 bezeichnen die technischen Datenverträge für Akt 1, Akt 2 und Akt 3.
 In Befehlen müsst ihr diese Kürzel genau so verwenden. Die Kundinnen-App startet mit V1. Wenn ein
 späterer Akt den nächsten Datenvertrag freigibt, startet ihr nur die Kundinnen-App mit der dort
@@ -104,6 +126,9 @@ Regeln:
 - keine Platzhalter für misslungene Zeilen — was nicht importiert ist, fehlt sichtbar;
 - vor dem Textvergleich normalisiert der Prüfstand Texte auf Unicode-NFC; in Akt 1 bleiben die
   Inhalte einschließlich äußerer Leerzeichen ansonsten genau wie in der Quelle;
+- steht in einer Quellspalte mehr als ein Wert, trennt sie ein Komma gefolgt von genau einem
+  Leerzeichen. Nur dieses eine Leerzeichen ist Trennzeichen — jedes weitere Leerzeichen gehört
+  zum Wert und bleibt erhalten;
 - `city` enthält den vollständigen Ortsnamen aus der Quelle, auch wenn darin ein Komma vorkommt.
 
 ## Abschluss von Akt 1: Neuaufbau prüfen
@@ -134,7 +159,9 @@ Berücksichtigt dabei:
 
 - Transformation ins Relationenmodell und dritte Normalform; siehe
   [`normalization.md`](./normalization.md);
-- priorisierte und ausdrücklich nicht gemochte Hobbys (`-100` bis `100`);
+- priorisierte und ausdrücklich nicht gemochte Hobbys (`-100` bis `100`). Der Wertebereich ist
+  fachlich mit der Kundin vereinbart; die aktuelle Datenlieferung schöpft ihn nicht aus. Modelliert
+  den vereinbarten Bereich, nicht den in der Stichprobe vorgefundenen;
 - Freundeslisten;
 - ein direkt gespeichertes Profilbild sowie weitere hochgeladene oder verlinkte Fotos;
 - Datenschutz: Datenarten, Rechtsgrundlage, Schutzbedarf und technische/organisatorische
@@ -175,8 +202,18 @@ Regeln:
 - Eine Zeile je Sachverhalt. Mehrere Interessen ergeben mehrere Zeilen; dasselbe Hobby aus
   derselben Quelle erscheint nur einmal.
 - `source` dokumentiert die Herkunft einer Hobbyzuordnung; in Akt 2 ist sie `excel`.
+- `interest_code` und `gender` übernehmen den Wert aus der Quelle unverändert. Übersetzt sie nicht
+  in ausgeschriebene Bezeichnungen und legt keine eigene Codetabelle an. Die Spaltenüberschriften
+  der Excel-Datei sind Beschriftungen, keine Wertespezifikation — welche Werte tatsächlich
+  vorkommen, ergibt eure Quellenanalyse.
 - Likes und Nachrichten sind gerichtet: Absender beziehungsweise auslösende Person stehen links.
-- Bei widersprüchlichen Kontaktdaten gilt die eingeholte und dokumentierte Kundinnenentscheidung.
+- Bei widersprüchlichen Angaben zur selben Person gilt die eingeholte und dokumentierte
+  Kundinnenentscheidung. Das betrifft nicht nur Kontaktdaten, sondern jedes Feld, in dem sich die
+  Quellen widersprechen.
+- Die E-Mail-Adresse verbindet die beiden Quellen. Sie ist quellenübergreifend eindeutig, wobei
+  Groß- und Kleinschreibung keinen Unterschied macht: `Martin.Forster@web.ork` und
+  `martin.forster@web.ork` bezeichnen dieselbe Person. In den Views erscheint die Schreibweise aus
+  der Excel-Quelle.
 - Textvergleich wie in Akt 1; Zeitpunkte werden als Zeitwerte und auf die Sekunde genau verglichen.
 
 Startet die Anzeige-App für Akt 2 neu:
