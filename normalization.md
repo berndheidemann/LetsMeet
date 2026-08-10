@@ -120,24 +120,6 @@ der Kundennummer — und die ist selbst nur eine Nicht-Schlüssel-Spalte.
 
 ---
 
-## **Merksätze**
+## **Kurzformel**
 
-- **1NF:** Jede Zelle enthält genau einen einzelnen Wert.
-- **2NF:** Jede Nicht-Schlüssel-Spalte hängt vom **ganzen** Schlüssel ab, nicht nur von einem Teil.
-- **3NF:** Jede Nicht-Schlüssel-Spalte hängt **direkt** vom Schlüssel ab, nicht über eine andere
-  Nicht-Schlüssel-Spalte.
-
-Kurzformel: *Alles hängt vom Schlüssel ab, vom ganzen Schlüssel und von nichts als dem Schlüssel.*
-
----
-
-## **Prüffragen für eure Tabellen**
-
-1. Enthält eine Zelle mehrere Werte? → **1NF verletzt**, in eine eigene Tabelle aufteilen.
-2. Ist der Primärschlüssel zusammengesetzt, und hängt eine Spalte nur von einem Teil davon ab?
-   → **2NF verletzt**, in die Tabelle dieses Schlüsselteils auslagern.
-3. Hängt eine Spalte von einer anderen Nicht-Schlüssel-Spalte ab? → **3NF verletzt**, beide in eine
-   eigene Tabelle auslagern und über einen Fremdschlüssel verbinden.
-
-**Das Ziel:** Jede Tabelle enthält nur Informationen zu einem klaren Thema, jede Zelle ist atomar,
-und jede Information steht an genau einer Stelle.
+*Alles hängt vom Schlüssel ab, vom ganzen Schlüssel und von nichts als dem Schlüssel.*

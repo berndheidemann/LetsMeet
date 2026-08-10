@@ -39,7 +39,8 @@ ER-Diagramm selbst.
 docker compose up -d
 ```
 
-Danach sind erreichbar:
+Alle `docker compose`-Befehle laufen im Wurzelverzeichnis eures geklonten Projekts — dort, wo
+`compose.yml` liegt. Danach sind erreichbar:
 
 - PostgreSQL: `localhost:5432`, Datenbank `lf8_lets_meet_db`
 - MongoDB: `localhost:27017`, Datenbank `LetsMeet`
@@ -47,28 +48,8 @@ Danach sind erreichbar:
 
 PostgreSQL-Zugang: Benutzer `user`, Passwort `secret`.
 
-### Wenn ein Port schon belegt ist
-
-Scheitert `docker compose up -d` mit einer Meldung wie `port is already allocated` oder
-`address already in use`, läuft auf eurem Rechner bereits ein anderes Programm auf Port `5432`
-(PostgreSQL) oder `27017` (MongoDB). Ihr müsst dann nichts deinstallieren: Legt neben `compose.yml`
-eine Datei `.env` an und tragt dort einen freien Port ein. Docker Compose liest sie automatisch.
-
-```bash
-LETSMEET_PG_PORT=55432
-LETSMEET_MONGO_PORT=57017
-```
-
-Prüft das Ergebnis vor dem Start mit `docker compose config` — dort muss der neue Port stehen und
-der alte verschwunden sein. Die `.env` gilt nur für euren Rechner; nehmt sie nicht mit ins
-Git-Repository, sonst erben eure Teamkolleginnen und -kollegen fremde Ports.
-
-Ihr verbindet euch danach von außen über den neuen Port, also `localhost:55432` statt
-`localhost:5432`. Innerhalb des Docker-Netzes bleibt alles unverändert; der Prüfstand ist von der
-Änderung nicht betroffen.
-
-**Wichtig:** Der Konflikt entsteht durch ein anderes Programm auf eurem Rechner, nicht durch eure
-Daten. `docker compose down -v` hilft dagegen nicht — es löscht nur euren eigenen Datenstand.
+Startet etwas nicht, hilft der Abschnitt [Wenn etwas nicht funktioniert](#wenn-etwas-nicht-funktioniert)
+am Ende dieser Datei.
 
 Die Kürzel V1, V2 und V3 bezeichnen die technischen Datenverträge für Akt 1, Akt 2 und Akt 3.
 In Befehlen müsst ihr diese Kürzel genau so verwenden. Die Kundinnen-App startet mit V1. Wenn ein
@@ -85,9 +66,6 @@ PowerShell:
 $env:LETSMEET_CONTRACT_VERSION="V2"
 docker compose up -d --force-recreate kundinnen_app
 ```
-
-Der Verlauf eurer Prüfläufe und die dazugehörigen technischen Prüfdateien liegen im Volume
-`lf8_lets_meet_check_history` und bleiben beim Container-Neustart erhalten.
 
 ---
 
@@ -132,42 +110,28 @@ Regeln:
 - keine Platzhalter für misslungene Zeilen — was nicht importiert ist, fehlt sichtbar;
 - vor dem Textvergleich normalisiert der Prüfstand Texte auf Unicode-NFC; in Akt 1 bleiben die
   Inhalte einschließlich äußerer Leerzeichen ansonsten genau wie in der Quelle;
-- in den beiden zusammengesetzten Spalten `Nachname, Vorname` und `Straße Nr, PLZ Ort` trennt ein
-  Komma gefolgt von genau einem Leerzeichen die Werte. Nur dieses eine Trennleerzeichen gehört zum
-  Format; jedes weitere Leerzeichen gehört zum Wert und bleibt erhalten — auch eines unmittelbar
-  **vor** dem Komma und eines am Ende der Zelle. Aus `Stanislav , Petrov` wird also der Nachname
-  `Stanislav ` mit Leerzeichen. Diese Regel gilt nur für diese beiden Spalten; andere Spalten
-  benutzen andere Trennzeichen, die ihr beim Profilieren selbst bestimmt;
-- die Adresse besteht aus genau drei Teilen in dieser Reihenfolge: Straße mit Hausnummer,
-  Postleitzahl, Ort. Enthält der Ortsname selbst ein Komma, gehört es zum Ort — `city` enthält dann
-  den vollständigen Namen, zum Beispiel `Demmin, Hansestadt`.
+- in den zusammengesetzten Spalten `Nachname, Vorname` und `Straße Nr, PLZ Ort` trennt „Komma +
+  genau ein Leerzeichen“; jedes weitere Leerzeichen gehört zum Wert. Aus `Stanislav , Petrov` wird
+  der Nachname `Stanislav ` — mit Leerzeichen. Andere Spalten haben andere Trennzeichen, die ihr
+  beim Profilieren selbst bestimmt;
+- die Adresse besteht aus Straße mit Hausnummer, Postleitzahl und Ort in dieser Reihenfolge. Ein
+  Komma im Ortsnamen gehört zum Ort: `Demmin, Hansestadt`.
 
 ## Abschluss von Akt 1: Neuaufbau prüfen
 
 Für den Abschluss zählt nicht der Zustand eurer Datenbank, sondern dass eure Skripte ihn aus dem
-Nichts erzeugen können. Der Ablauf ist deshalb immer derselbe: leeren, importieren, prüfen.
+Nichts erzeugen können. Der Ablauf ist deshalb immer derselbe: **leeren, importieren, prüfen.**
 
-### Schritt 1 — Datenbank leeren
-
-Löscht alle Tabellen und Views im Schema `public`:
+**1. Leeren** — alle Tabellen und Views im Schema `public` löschen:
 
 ```bash
 docker compose exec postgres_for_lf8_starter psql -U user -d lf8_lets_meet_db -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
 ```
 
-Danach ist die Datenbank leer, euer Prüfverlauf bleibt aber erhalten. Der weiter unten beschriebene
-Befehl `docker compose down -v` leert ebenfalls, löscht dabei jedoch zusätzlich den Verlauf und die
-MongoDB — für den Neuaufbau vor einem Prüflauf braucht ihr ihn nicht.
+**2. Importieren** — eure eigenen Importskripte ausführen, so wie ein anderes Team es auch tun
+würde.
 
-### Schritt 2 — Import laufen lassen
-
-Führt eure eigenen Importskripte aus, so wie ein anderes Team es auch tun würde.
-
-### Schritt 3 — Prüfen
-
-Alle `docker compose`-Befehle laufen in dem Verzeichnis, in dem `compose.yml` liegt — also im
-Wurzelverzeichnis eures geklonten Projekts. Meldet Docker `no configuration file provided`, seid
-ihr im falschen Verzeichnis.
+**3. Prüfen:**
 
 ```bash
 docker compose run --rm -e CONTRACT_VERSION=V1 kundinnen_app node server/dist/cli.js
@@ -263,9 +227,9 @@ führt danach diesen Prüfbefehl im Terminal aus:
 docker compose run --rm -e CONTRACT_VERSION=V2 kundinnen_app node server/dist/cli.js
 ```
 
-Endet der Befehl mit Exit-Code `0` — also ohne Fehler —, ist die Abschlussprüfung für Akt 2
-bestanden. Registriert vorher eure ERD-Share-URL und setzt anschließend in der Begleit-Website den
-Haken für Akt 2. Danach folgt die nächste Anweisung.
+Endet der Befehl mit Exit-Code `0`, ist die Abschlussprüfung für Akt 2 bestanden. Registriert
+vorher eure ERD-Share-URL und setzt anschließend in der Begleit-Website den Haken für Akt 2.
+Danach folgt die nächste Anweisung.
 
 ---
 
@@ -295,9 +259,8 @@ results/
     tests/
 ```
 
-Verbindlich ist nicht der Dateiname. Ein anderes Team muss eure Datenbank mit euren Skripten aus
-einer leeren PostgreSQL-Datenbank neu aufbauen, eure Entscheidungen nachvollziehen und die Prüfbefehle für
-die Akte erneut ausführen können.
+Verbindlich ist nicht der Dateiname, sondern dass ein anderes Team eure Entscheidungen
+nachvollziehen und die Prüfbefehle nach einem eigenen Neuaufbau erneut ausführen kann.
 
 ---
 
@@ -321,11 +284,8 @@ MongoDB-Verbindungs-URI für Compass oder die VS-Code-Erweiterung:
 mongodb://localhost:27017/LetsMeet
 ```
 
-Habt ihr wegen eines Portkonflikts eine `.env` angelegt, gelten hier eure geänderten Ports —
-also zum Beispiel `55432` statt `5432`. Verbindet ihr euch versehentlich auf den alten Port,
-landet ihr in der bereits laufenden Datenbank eures Rechners: Eure Tabellen und Views entstehen
-dann dort, das Werkzeug zeigt alles grün, und der Prüfstand meldet trotzdem weiter
-`Keine View migration_users`.
+Der Verlauf eurer Prüfläufe liegt im Volume `lf8_lets_meet_check_history` und bleibt beim
+Container-Neustart erhalten.
 
 ## Alles zurücksetzen, auch MongoDB und Prüfverlauf
 
@@ -334,11 +294,44 @@ docker compose down -v
 ```
 
 **Achtung:** Dieser Befehl löscht eure lokalen PostgreSQL- und MongoDB-Daten sowie den Verlauf der
-Prüfläufe. Euer Git-Stand bleibt erhalten.
-
-Für den normalen Neuaufbau vor einem Prüflauf braucht ihr ihn **nicht** — dafür genügt das Leeren
-des Schemas aus „Abschluss von Akt 1". Dieser Befehl hier ist der große Reset, wenn ihr auch die
-MongoDB und den Prüfverlauf loswerden wollt.
+Prüfläufe. Euer Git-Stand bleibt erhalten. Für den normalen Neuaufbau vor einem Prüflauf braucht
+ihr ihn **nicht** — dafür genügt das Leeren des Schemas aus „Abschluss von Akt 1".
 
 Nicht zu verwechseln mit dem Knopf „Lokalen Stand zurücksetzen" auf der Begleit-Website: Der
 löscht nur eure dort gesetzten Haken im Browser und rührt keine Datenbank an.
+
+---
+
+# Wenn etwas nicht funktioniert
+
+## `no configuration file provided`
+
+Ihr seid im falschen Verzeichnis. Alle `docker compose`-Befehle laufen dort, wo `compose.yml`
+liegt — im Wurzelverzeichnis eures geklonten Projekts.
+
+## `port is already allocated` oder `address already in use`
+
+Auf eurem Rechner läuft bereits ein anderes Programm auf Port `5432` (PostgreSQL) oder `27017`
+(MongoDB). Ihr müsst nichts deinstallieren: Legt neben `compose.yml` eine Datei `.env` an und
+tragt dort einen freien Port ein. Docker Compose liest sie automatisch.
+
+```bash
+LETSMEET_PG_PORT=55432
+LETSMEET_MONGO_PORT=57017
+```
+
+Prüft das Ergebnis vor dem Start mit `docker compose config` — dort muss der neue Port stehen und
+der alte verschwunden sein. Die `.env` gilt nur für euren Rechner; nehmt sie nicht mit ins
+Git-Repository, sonst erben eure Teamkolleginnen und -kollegen fremde Ports.
+
+Ihr verbindet euch danach von außen über den neuen Port, also `localhost:55432` statt
+`localhost:5432` — auch in DBeaver, SQLTools oder Compass. Innerhalb des Docker-Netzes bleibt
+alles unverändert; der Prüfstand ist von der Änderung nicht betroffen.
+
+Der Konflikt entsteht durch ein anderes Programm, nicht durch eure Daten — `docker compose down -v`
+hilft dagegen nicht.
+
+## Das Werkzeug zeigt alles grün, der Prüfstand meldet `Keine View migration_users`
+
+Ihr seid vermutlich auf dem alten Port verbunden und arbeitet in der bereits laufenden Datenbank
+eures Rechners. Eure Tabellen und Views entstehen dann dort statt im Container.
