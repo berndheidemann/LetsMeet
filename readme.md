@@ -35,16 +35,37 @@ ER-Diagramm selbst.
 
 ## Technischer Start
 
+Die Arbeitsumgebung lässt sich auf zwei Wegen starten. **Eure Lehrkraft sagt euch, welcher für
+euch gilt.** An den Aufgaben ändert das nichts: Ports, Zugangsdaten und alle Inhalte sind in
+beiden Varianten gleich. Wo sich Befehle unterscheiden, stehen sie im Folgenden nebeneinander.
+
+### Variante A — lokal mit Docker
+
 ```bash
 docker compose up -d
 ```
 
 Alle `docker compose`-Befehle laufen im Wurzelverzeichnis eures geklonten Projekts — dort, wo
-`compose.yml` liegt. Danach sind erreichbar:
+`compose.yml` liegt.
+
+### Variante B — auf dem Schulserver, ohne Docker
+
+Im Terminal eurer JupyterLab-Umgebung:
+
+```bash
+letsmeet up
+```
+
+Damit laufen dieselben drei Dienste als gewöhnliche Programme in eurem eigenen Arbeitsbereich.
+`letsmeet status` zeigt, was gerade läuft; `letsmeet down` stoppt alles wieder, ohne eure Daten
+zu löschen.
+
+### In beiden Varianten erreichbar
 
 - PostgreSQL: `localhost:5432`, Datenbank `lf8_lets_meet_db`
 - MongoDB: `localhost:27017`, Datenbank `LetsMeet`
-- Kundinnen-App und Prüfstand: [http://localhost:3611](http://localhost:3611)
+- Kundinnen-App und Prüfstand: [http://localhost:3611](http://localhost:3611) — auf dem
+  Schulserver über die Adresse, die euch `letsmeet up` anzeigt
 
 PostgreSQL-Zugang: Benutzer `user`, Passwort `secret`.
 
@@ -53,10 +74,12 @@ am Ende dieser Datei.
 
 Die Kürzel V1, V2 und V3 bezeichnen die technischen Datenverträge für Akt 1, Akt 2 und Akt 3: die
 Datenbankansichten, die ihr je Akt verbindlich bereitstellt (ausformuliert unten unter „Datenvertrag
-für Akt 1“.
+für Akt 1“).
 In Befehlen müsst ihr diese Kürzel genau so verwenden. Die Kundinnen-App startet mit V1. Wenn ein
 späterer Akt den nächsten Datenvertrag freigibt, startet ihr nur die Kundinnen-App mit der dort
 genannten Version neu. Beispiel für Akt 2 mit V2:
+
+**Variante A — Docker:**
 
 ```bash
 LETSMEET_CONTRACT_VERSION=V2 docker compose up -d --force-recreate kundinnen_app
@@ -67,6 +90,12 @@ PowerShell:
 ```powershell
 $env:LETSMEET_CONTRACT_VERSION="V2"
 docker compose up -d --force-recreate kundinnen_app
+```
+
+**Variante B — Schulserver:**
+
+```bash
+letsmeet contract V2
 ```
 
 ---
@@ -129,8 +158,16 @@ Nichts erzeugen können. Der Ablauf ist deshalb immer derselbe: **leeren, import
 
 **1. Leeren** — alle Tabellen und Views im Schema `public` löschen:
 
+Variante A — Docker:
+
 ```bash
 docker compose exec postgres_for_lf8_starter psql -U user -d lf8_lets_meet_db -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
+```
+
+Variante B — Schulserver:
+
+```bash
+letsmeet leeren
 ```
 
 **2. Importieren** — eure eigenen Importskripte ausführen, so wie ein anderes Team es auch tun
@@ -138,8 +175,16 @@ würde.
 
 **3. Prüfen:**
 
+Variante A — Docker:
+
 ```bash
 docker compose run --rm -e CONTRACT_VERSION=V1 kundinnen_app node server/dist/cli.js
+```
+
+Variante B — Schulserver:
+
+```bash
+letsmeet check V1
 ```
 
 Endet der Befehl mit Exit-Code `0` — also ohne Fehler —, ist die Abschlussprüfung für Akt 1
@@ -243,8 +288,16 @@ Regeln:
 
 Startet die Anzeige-App für Akt 2 neu:
 
+Variante A — Docker:
+
 ```bash
 LETSMEET_CONTRACT_VERSION=V2 docker compose up -d --force-recreate kundinnen_app
+```
+
+Variante B — Schulserver:
+
+```bash
+letsmeet contract V2
 ```
 
 ## Abschluss von Akt 2: Gemeinsamen Neuaufbau prüfen
@@ -252,8 +305,16 @@ LETSMEET_CONTRACT_VERSION=V2 docker compose up -d --force-recreate kundinnen_app
 Leert die Datenbank wie in Akt 1 beschrieben, baut Excel- und MongoDB-Import gemeinsam neu auf und
 führt danach diesen Prüfbefehl im Terminal aus:
 
+Variante A — Docker:
+
 ```bash
 docker compose run --rm -e CONTRACT_VERSION=V2 kundinnen_app node server/dist/cli.js
+```
+
+Variante B — Schulserver:
+
+```bash
+letsmeet check V2
 ```
 
 Endet der Befehl mit Exit-Code `0`, ist die Abschlussprüfung für Akt 2 bestanden. Registriert
@@ -289,13 +350,25 @@ MongoDB-Verbindungs-URI für Compass oder die VS-Code-Erweiterung:
 mongodb://localhost:27017/LetsMeet
 ```
 
+Auf dem Schulserver arbeitet ihr im Terminal mit `letsmeet psql`; grafische Werkzeuge wie DBeaver
+oder Compass laufen dort nicht. Die Verbindungsdaten sind dieselben.
+
 Der Verlauf eurer Prüfläufe liegt im Volume `lf8_lets_meet_check_history` und bleibt beim
-Container-Neustart erhalten.
+Container-Neustart erhalten; auf dem Schulserver liegt er in eurem Arbeitsbereich und übersteht
+`letsmeet down` ebenfalls.
 
 ## Alles zurücksetzen, auch MongoDB und Prüfverlauf
 
+Variante A — Docker:
+
 ```bash
 docker compose down -v
+```
+
+Variante B — Schulserver:
+
+```bash
+letsmeet reset-all
 ```
 
 **Achtung:** Dieser Befehl löscht eure lokalen PostgreSQL- und MongoDB-Daten sowie den Verlauf der
@@ -311,12 +384,12 @@ löscht nur eure dort gesetzten Haken im Browser und rührt keine Datenbank an.
 
 # Wenn etwas nicht funktioniert
 
-## `no configuration file provided`
+## `no configuration file provided` (Variante A)
 
 Ihr seid im falschen Verzeichnis. Alle `docker compose`-Befehle laufen dort, wo `compose.yml`
 liegt — im Wurzelverzeichnis eures geklonten Projekts.
 
-## `port is already allocated` oder `address already in use`
+## `port is already allocated` oder `address already in use` (Variante A)
 
 Auf eurem Rechner läuft bereits ein anderes Programm auf Port `5432` (PostgreSQL) oder `27017`
 (MongoDB). Ihr müsst nichts deinstallieren: Legt neben `compose.yml` eine Datei `.env` an und
@@ -337,6 +410,17 @@ alles unverändert; der Prüfstand ist von der Änderung nicht betroffen.
 
 Der Konflikt entsteht durch ein anderes Programm, nicht durch eure Daten — `docker compose down -v`
 hilft dagegen nicht.
+
+## Auf dem Schulserver ist nach der Anmeldung nichts erreichbar (Variante B)
+
+Eure Dienste laufen nur, solange eure Arbeitsumgebung läuft. Nach einer längeren Pause oder einer
+Neuanmeldung startet ihr sie mit `letsmeet up` wieder — **eure Daten bleiben dabei erhalten**.
+`letsmeet status` zeigt jederzeit, was gerade läuft.
+
+Meldet die Shell `letsmeet: command not found`, fehlt das Verzeichnis `~/bin` in eurem Suchpfad.
+Ihr erreicht das Kommando dann über den vollen Pfad `~/bin/letsmeet`.
+
+Startet die Kundinnen-App nicht, steht der Grund in `~/work/letsmeet/run/app.log`.
 
 ## Das Werkzeug zeigt alles grün, der Prüfstand meldet `Keine View migration_users`
 
