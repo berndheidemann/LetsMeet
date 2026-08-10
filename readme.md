@@ -108,14 +108,15 @@ Regeln:
 - eine Zeile pro migrierter Person;
 - `email` eindeutig und nicht leer;
 - keine Platzhalter für misslungene Zeilen — was nicht importiert ist, fehlt sichtbar;
-- vor dem Textvergleich normalisiert der Prüfstand Texte auf Unicode-NFC; in Akt 1 bleiben die
+- vor dem Textvergleich vereinheitlicht der Prüfstand Texte auf Unicode-NFC; in Akt 1 bleiben die
   Inhalte einschließlich äußerer Leerzeichen ansonsten genau wie in der Quelle;
 - in den zusammengesetzten Spalten `Nachname, Vorname` und `Straße Nr, PLZ Ort` trennt „Komma +
   genau ein Leerzeichen“; jedes weitere Leerzeichen gehört zum Wert. Aus `Stanislav , Petrov` wird
   der Nachname `Stanislav ` — mit Leerzeichen. Andere Spalten haben andere Trennzeichen, die ihr
   beim Profilieren selbst bestimmt;
-- die Adresse besteht aus Straße mit Hausnummer, Postleitzahl und Ort in dieser Reihenfolge. Ein
-  Komma im Ortsnamen gehört zum Ort: `Demmin, Hansestadt`.
+- die Adresszelle besteht aus **genau drei komma-getrennten Teilen** in dieser Reihenfolge: Straße
+  mit Hausnummer, Postleitzahl, Ort. Der Ort ist alles nach dem zweiten Komma — ein Komma im
+  Ortsnamen gehört also zum Ort: `Demmin, Hansestadt`.
 
 ## Abschluss von Akt 1: Neuaufbau prüfen
 
@@ -295,7 +296,9 @@ docker compose down -v
 
 **Achtung:** Dieser Befehl löscht eure lokalen PostgreSQL- und MongoDB-Daten sowie den Verlauf der
 Prüfläufe. Euer Git-Stand bleibt erhalten. Für den normalen Neuaufbau vor einem Prüflauf braucht
-ihr ihn **nicht** — dafür genügt das Leeren des Schemas aus „Abschluss von Akt 1".
+ihr ihn **nicht** — dafür genügt das Leeren des Schemas aus „Abschluss von Akt 1". Gegen einen
+belegten Port hilft er ebenfalls nicht; das löst der Abschnitt
+[Wenn etwas nicht funktioniert](#wenn-etwas-nicht-funktioniert).
 
 Nicht zu verwechseln mit dem Knopf „Lokalen Stand zurücksetzen" auf der Begleit-Website: Der
 löscht nur eure dort gesetzten Haken im Browser und rührt keine Datenbank an.
