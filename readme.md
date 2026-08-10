@@ -127,10 +127,15 @@ Regeln:
 - keine Platzhalter für misslungene Zeilen — was nicht importiert ist, fehlt sichtbar;
 - vor dem Textvergleich normalisiert der Prüfstand Texte auf Unicode-NFC; in Akt 1 bleiben die
   Inhalte einschließlich äußerer Leerzeichen ansonsten genau wie in der Quelle;
-- steht in einer Quellspalte mehr als ein Wert, trennt sie ein Komma gefolgt von genau einem
-  Leerzeichen. Nur dieses eine Leerzeichen ist Trennzeichen — jedes weitere Leerzeichen gehört
-  zum Wert und bleibt erhalten;
-- `city` enthält den vollständigen Ortsnamen aus der Quelle, auch wenn darin ein Komma vorkommt.
+- in den beiden zusammengesetzten Spalten `Nachname, Vorname` und `Straße Nr, PLZ Ort` trennt ein
+  Komma gefolgt von genau einem Leerzeichen die Werte. Nur dieses eine Trennleerzeichen gehört zum
+  Format; jedes weitere Leerzeichen gehört zum Wert und bleibt erhalten — auch eines unmittelbar
+  **vor** dem Komma und eines am Ende der Zelle. Aus `Stanislav , Petrov` wird also der Nachname
+  `Stanislav ` mit Leerzeichen. Diese Regel gilt nur für diese beiden Spalten; andere Spalten
+  benutzen andere Trennzeichen, die ihr beim Profilieren selbst bestimmt;
+- die Adresse besteht aus genau drei Teilen in dieser Reihenfolge: Straße mit Hausnummer,
+  Postleitzahl, Ort. Enthält der Ortsname selbst ein Komma, gehört es zum Ort — `city` enthält dann
+  den vollständigen Namen, zum Beispiel `Demmin, Hansestadt`.
 
 ## Abschluss von Akt 1: Neuaufbau prüfen
 
