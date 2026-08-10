@@ -3,7 +3,7 @@
 Die **Let’s Meet GmbH** wechselt nach einer schwierigen Trennung den IT-Dienstleister. Statt einer
 laufenden Datenbank liegen nur schrittweise freigegebene Datenstände vor. Euer
 Team rekonstruiert daraus eine PostgreSQL-Datenbank, die eine
-Anzeige-App der Kundin wieder versorgen kann.
+Anzeige-App der Kundin (im Folgenden: Kundinnen-App) wieder versorgen kann.
 
 ![Ausschnitt aus „Tea with friends, and one must wear one's finest hat!“ (Public Domain)](./images/tea-with-friends.png)
 
@@ -51,7 +51,9 @@ PostgreSQL-Zugang: Benutzer `user`, Passwort `secret`.
 Startet etwas nicht, hilft der Abschnitt [Wenn etwas nicht funktioniert](#wenn-etwas-nicht-funktioniert)
 am Ende dieser Datei.
 
-Die Kürzel V1, V2 und V3 bezeichnen die technischen Datenverträge für Akt 1, Akt 2 und Akt 3.
+Die Kürzel V1, V2 und V3 bezeichnen die technischen Datenverträge für Akt 1, Akt 2 und Akt 3: die
+Datenbankansichten, die ihr je Akt verbindlich bereitstellt (ausformuliert unten unter „Datenvertrag
+für Akt 1“.
 In Befehlen müsst ihr diese Kürzel genau so verwenden. Die Kundinnen-App startet mit V1. Wenn ein
 späterer Akt den nächsten Datenvertrag freigibt, startet ihr nur die Kundinnen-App mit der dort
 genannten Version neu. Beispiel für Akt 2 mit V2:
@@ -84,7 +86,8 @@ MongoDB kommt in Akt 2 dazu.
 ## Auftrag
 
 1. Profiliert die Quelle und haltet auffällige Formate, Mehrfachwerte und offene Fragen fest.
-2. Erstellt das minimale physische Modell und einen Import aus einer **leeren** Datenbank.
+2. Erstellt das minimale physische Modell — die Tabellen, die ihr für die geforderte View wirklich
+   braucht, mit Spalten, Datentypen und Schlüsseln — und einen Import aus einer **leeren** Datenbank.
 3. Stellt die folgende View bereit. Eure internen Tabellen und Joins bleiben eure Entscheidung.
 4. Öffnet die Kundinnen-App und untersucht sichtbare Folgen eurer Importentscheidungen.
 5. Schreibt eigene SQL-Abfragen oder automatisierte Tests für eure zentralen Importannahmen.
@@ -108,8 +111,9 @@ Regeln:
 - eine Zeile pro migrierter Person;
 - `email` eindeutig und nicht leer;
 - keine Platzhalter für misslungene Zeilen — was nicht importiert ist, fehlt sichtbar;
-- vor dem Textvergleich vereinheitlicht der Prüfstand Texte auf Unicode-NFC; in Akt 1 bleiben die
-  Inhalte einschließlich äußerer Leerzeichen ansonsten genau wie in der Quelle;
+- vor dem Textvergleich vereinheitlicht der Prüfstand Texte automatisch auf Unicode-NFC — dafür
+  müsst ihr nichts tun; in Akt 1 bleiben die Inhalte einschließlich äußerer Leerzeichen ansonsten
+  genau wie in der Quelle;
 - in den zusammengesetzten Spalten `Nachname, Vorname` und `Straße Nr, PLZ Ort` trennt „Komma +
   genau ein Leerzeichen“; jedes weitere Leerzeichen gehört zum Wert. Aus `Stanislav , Petrov` wird
   der Nachname `Stanislav ` — mit Leerzeichen. Andere Spalten haben andere Trennzeichen, die ihr
@@ -140,6 +144,30 @@ docker compose run --rm -e CONTRACT_VERSION=V1 kundinnen_app node server/dist/cl
 
 Endet der Befehl mit Exit-Code `0` — also ohne Fehler —, ist die Abschlussprüfung für Akt 1
 bestanden. Setzt danach in der Begleit-Website den Haken für Akt 1; dort öffnet sich Akt 2.
+
+---
+
+# Erwartete Repository-Artefakte
+
+Diese Struktur gilt ab Akt 1. Eine mögliche Form:
+
+```text
+results/
+  quellenanalyse.md
+  konzeptuelles_modell.md
+  logisches_modell.md
+  physische_modelle.md
+  datenschutz.md
+  konfliktentscheidungen.md
+  scripts/
+    create_tables.sql
+    import_excel.*
+    import_mongodb.*
+    tests/
+```
+
+Verbindlich ist nicht der Dateiname, sondern dass ein anderes Team eure Entscheidungen
+nachvollziehen und die Prüfbefehle nach einem eigenen Neuaufbau erneut ausführen kann.
 
 ---
 
@@ -238,30 +266,6 @@ Danach folgt die nächste Anweisung.
 
 Beginnt Akt 3 erst, wenn euch der nächste Auftrag angezeigt wird. Bis dahin sind ausschließlich
 Akt 1 und Akt 2 verbindlich.
-
----
-
-# Erwartete Repository-Artefakte
-
-Eine mögliche Struktur:
-
-```text
-results/
-  quellenanalyse.md
-  konzeptuelles_modell.md
-  logisches_modell.md
-  physische_modelle.md
-  datenschutz.md
-  konfliktentscheidungen.md
-  scripts/
-    create_tables.sql
-    import_excel.*
-    import_mongodb.*
-    tests/
-```
-
-Verbindlich ist nicht der Dateiname, sondern dass ein anderes Team eure Entscheidungen
-nachvollziehen und die Prüfbefehle nach einem eigenen Neuaufbau erneut ausführen kann.
 
 ---
 
