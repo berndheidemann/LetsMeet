@@ -112,8 +112,8 @@ Regeln:
 - `email` eindeutig und nicht leer;
 - keine Platzhalter für misslungene Zeilen — was nicht importiert ist, fehlt sichtbar;
 - vor dem Textvergleich vereinheitlicht der Prüfstand Texte automatisch auf Unicode-NFC — dafür
-  müsst ihr nichts tun; in Akt 1 bleiben die Inhalte einschließlich äußerer Leerzeichen ansonsten
-  genau wie in der Quelle;
+  müsst ihr nichts tun. Ansonsten übernimmt Akt 1 die Inhalte unverändert, einschließlich äußerer
+  Leerzeichen: Daten zu bereinigen ist ein eigener Arbeitsschritt und nicht Teil des Imports;
 - in den zusammengesetzten Spalten `Nachname, Vorname` und `Straße Nr, PLZ Ort` trennt „Komma +
   genau ein Leerzeichen“; jedes weitere Leerzeichen gehört zum Wert. Aus `Stanislav , Petrov` wird
   der Nachname `Stanislav ` — mit Leerzeichen. Andere Spalten haben andere Trennzeichen, die ihr
