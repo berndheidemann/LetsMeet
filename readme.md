@@ -351,8 +351,27 @@ MongoDB-Verbindungs-URI für Compass oder die VS-Code-Erweiterung:
 mongodb://localhost:27017/LetsMeet
 ```
 
-Auf dem Schulserver arbeitet ihr im Terminal mit `letsmeet psql`; grafische Werkzeuge wie DBeaver
-oder Compass laufen dort nicht. Die Verbindungsdaten sind dieselben.
+Auf dem Schulserver laufen grafische Werkzeuge wie DBeaver oder Compass nicht. Die Verbindungsdaten
+sind dieselben; ihr erreicht die Datenbanken im Terminal mit `letsmeet psql` und `letsmeet mongosh`
+oder aus einem Notebook heraus. `letsmeet zugang` zeigt euch diese Angaben jederzeit an.
+
+**Eine Abweichung, die ihr sonst suchen müsstet:** Der PostgreSQL-Treiber heißt auf dem Schulserver
+`pg8000`, nicht `psycopg2`. `psycopg2` ist dort nicht installiert und lässt sich auch nicht
+nachinstallieren — es müsste beim Installieren übersetzt werden, was auf der Hardware der Server
+nicht funktioniert. `pg8000` ist bereits vorhanden und wird über den Verbindungsstring ausgewählt:
+
+```python
+# PostgreSQL
+from sqlalchemy import create_engine
+engine = create_engine("postgresql+pg8000://user:secret@127.0.0.1:5432/lf8_lets_meet_db")
+
+# MongoDB
+from pymongo import MongoClient
+db = MongoClient("mongodb://127.0.0.1:27017/")["LetsMeet"]
+```
+
+Wie ihr von dort weiterarbeitet — `pandas.read_sql`, `%sql`-Magic, direkte Abfragen —, entscheidet
+ihr selbst. Bei Variante A gilt der übliche Weg mit `psycopg2`.
 
 Der Verlauf eurer Prüfläufe liegt im Volume `lf8_lets_meet_check_history` und bleibt beim
 Container-Neustart erhalten; auf dem Schulserver liegt er in eurem Arbeitsbereich und übersteht
@@ -418,8 +437,8 @@ Eure Dienste laufen nur, solange eure Arbeitsumgebung läuft. Nach einer länger
 Neuanmeldung startet ihr sie mit `letsmeet up` wieder — **eure Daten bleiben dabei erhalten**.
 `letsmeet status` zeigt jederzeit, was gerade läuft.
 
-Meldet die Shell `letsmeet: command not found`, fehlt das Verzeichnis `~/bin` in eurem Suchpfad.
-Ihr erreicht das Kommando dann über den vollen Pfad `~/bin/letsmeet`.
+Meldet die Shell `letsmeet: command not found`, läuft eure Arbeitsumgebung noch aus einer älteren
+Sitzung. Meldet euch ab und startet den Server neu; danach ist das Kommando da.
 
 Startet die Kundinnen-App nicht, steht der Grund in `~/work/letsmeet/run/app.log`.
 
