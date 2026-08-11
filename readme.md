@@ -117,6 +117,7 @@ MongoDB kommt in Akt 2 dazu.
 1. Profiliert die Quelle und haltet auffällige Formate, Mehrfachwerte und offene Fragen fest.
 2. Erstellt das minimale physische Modell — die Tabellen, die ihr für die geforderte View wirklich
    braucht, mit Spalten, Datentypen und Schlüsseln — und einen Import aus einer **leeren** Datenbank.
+   Die Wahl der Programmiersprache und des Werkzeugs für den Import liegt bei euch.
 3. Stellt die folgende View bereit. Eure internen Tabellen und Joins bleiben eure Entscheidung.
 4. Öffnet die Kundinnen-App und untersucht sichtbare Folgen eurer Importentscheidungen.
 5. Schreibt eigene SQL-Abfragen oder automatisierte Tests für eure zentralen Importannahmen.
@@ -147,9 +148,9 @@ Regeln:
   genau ein Leerzeichen“; jedes weitere Leerzeichen gehört zum Wert. Aus `Stanislav , Petrov` wird
   der Nachname `Stanislav ` — mit Leerzeichen. Andere Spalten haben andere Trennzeichen, die ihr
   beim Profilieren selbst bestimmt;
-- die Adresszelle besteht aus **genau drei komma-getrennten Teilen** in dieser Reihenfolge: Straße
-  mit Hausnummer, Postleitzahl, Ort. Der Ort ist alles nach dem zweiten Komma — ein Komma im
-  Ortsnamen gehört also zum Ort: `Demmin, Hansestadt`.
+- die Adresszelle besteht aus **genau drei Teilen** in dieser Reihenfolge: Straße mit Hausnummer,
+  Postleitzahl, Ort. Der Ort ist alles nach dem zweiten Komma — ein Komma im Ortsnamen gehört also
+  zum Ort: `Demmin, Hansestadt`.
 
 ## Abschluss von Akt 1: Neuaufbau prüfen
 
