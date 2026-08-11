@@ -26,6 +26,13 @@ Datenbankansichten (Views) dürft ihr selbst entwerfen.
 - Haltet ihr ein rotes Ergebnis für fachlich falsch, gebt der Lehrkraft Quelle, betroffenen
   Datensatz und eure Begründung.
 
+**Zur Arbeitsweise:** In diesem Auftrag begegnen euch Techniken, die im Unterricht noch nicht dran
+waren — das gehört dazu und ist kein Versehen. Erwartet wird nicht, dass ihr das alles schon
+könnt, sondern dass ihr euch einarbeitet: recherchiert, lest Dokumentation, fragt im Team und
+nutzt KI-Werkzeuge dort, wo sie euch weiterbringen. Eine Bedingung gilt dabei immer: Ihr müsst
+alles, was ihr abgebt, erklären können — woher es stammt, was es tut und warum ihr euch so
+entschieden habt. Was ihr nicht erklären könnt, gehört nicht in eure Abgabe.
+
 Die Begleit-Website führt euch durch die Übergänge:
 
 **[LetsMeet-Projektbegleitung öffnen](https://station.heidelab.de/letsmeet/)**
