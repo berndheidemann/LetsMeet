@@ -16,11 +16,11 @@ und prüft das Ergebnis. Ein anderes Team muss denselben Aufbau wiederholen kön
 mit einem reproduzierbaren Import gemeint. Die Tabellen hinter den geforderten
 Datenbankansichten (Views) dürft ihr selbst entwerfen.
 
-- Versioniert SQL, Importcode, eigene Datenprüfungen und kurze Markdown-Dokumentationen mit Git.
+- Versioniert SQL, Importcode und eigene Datenprüfungen mit Git.
 - Erstellt physische Modelle und die zugehörigen SQL-Anweisungen zur Definition der
   Datenbankstruktur (DDL) für die aufgenommenen Quelldaten und das PostgreSQL-Zielsystem.
-- Dokumentiert Annahmen, Transformationsregeln, Konfliktentscheidungen und nicht übernommene
-  Datensätze nachvollziehbar.
+- Führt eine **Befundnotiz** — das eine schriftliche Stück, das ihr durchgehend pflegt
+  (siehe [Eure Befundnotiz](#eure-befundnotiz)).
 - Der Prüfstand in der Kundinnen-App gibt euch Hinweise zum Weiterarbeiten. Für den Abschluss eines
   Akts zählt der Prüfbefehl im Terminal nach einem frischen Datenbankaufbau.
 - Haltet ihr ein rotes Ergebnis für fachlich falsch, gebt der Lehrkraft Quelle, betroffenen
@@ -121,14 +121,15 @@ MongoDB kommt in Akt 2 dazu.
 
 ## Auftrag
 
-1. Profiliert die Quelle und haltet auffällige Formate, Mehrfachwerte und offene Fragen fest.
+1. Profiliert die Quelle und haltet auffällige Formate, Mehrfachwerte und offene Fragen in eurer
+   Befundnotiz fest.
 2. Erstellt das minimale physische Modell — die Tabellen, die ihr für die geforderte View wirklich
    braucht, mit Spalten, Datentypen und Schlüsseln — und einen Import aus einer **leeren** Datenbank.
    Die Wahl der Programmiersprache und des Werkzeugs für den Import liegt bei euch.
 3. Stellt die folgende View bereit. Eure internen Tabellen und Joins bleiben eure Entscheidung.
 4. Öffnet die Kundinnen-App und untersucht sichtbare Folgen eurer Importentscheidungen.
 5. Schreibt eigene SQL-Abfragen oder automatisierte Tests für eure zentralen Importannahmen.
-6. Dokumentiert Importbefehl, Testergebnisse und bekannte Grenzen.
+6. Haltet in der Befundnotiz fest, wo euer Import an Grenzen stößt.
 
 ## Datenvertrag für Akt 1 (V1)
 
@@ -200,27 +201,31 @@ bestanden. Setzt danach in der Begleit-Website den Haken für Akt 1; dort öffne
 
 ---
 
-# Erwartete Repository-Artefakte
+# Eure Befundnotiz
 
-Diese Struktur gilt ab Akt 1. Eine mögliche Form:
+Ihr führt **ein** schriftliches Dokument durch das ganze Projekt — nennt es `results/befundnotiz.md`.
+Es entsteht **ab der ersten Woche** und wächst mit: Ihr schreibt hinein, sobald ihr etwas findet oder
+entscheidet, nicht rückwirkend am Ende. Wer sie erst zum Schluss schreibt, merkt das im Fachgespräch.
 
-```text
-results/
-  quellenanalyse.md
-  konzeptuelles_modell.md
-  logisches_modell.md
-  physische_modelle.md
-  datenschutz.md
-  konfliktentscheidungen.md
-  scripts/
-    create_tables.sql
-    import_excel.*
-    import_mongodb.*
-    tests/
-```
+Drei Fragen tragen die Notiz. Zu jedem Eintrag gehört das Datum:
 
-Verbindlich ist nicht der Dateiname, sondern dass ein anderes Team eure Entscheidungen
-nachvollziehen und die Prüfbefehle nach einem eigenen Neuaufbau erneut ausführen kann.
+1. **Was ist uns an der Quelle aufgefallen?** Beobachtungen, nicht Vermutungen — auffällige Formate,
+   Mehrfachwerte, Lücken, Widersprüche, offene Fragen an die Kundin.
+2. **Was haben wir daraufhin entschieden, und warum?** Die Regel, die ihr angewendet habt, dazu die
+   Alternative, die ihr verworfen habt, und was sie gekostet hätte.
+3. **Was haben wir nicht übernommen, und warum?** Was nicht importiert ist, fehlt sichtbar — hier
+   steht, weshalb.
+
+Dazu einmal im Projekt, spätestens wenn ihr die Daten das erste Mal vollständig vor euch habt:
+
+4. **Welche dieser Daten sind besonders schützenswert, und was folgt daraus für euren Umgang damit?**
+
+Die Notiz ist kein Aufsatz. Stichpunkte genügen, solange sie jemand anderes versteht. Sie ist euer
+eigenes Arbeitsmittel: **Im Fachgespräch dürft ihr sie offen vor euch liegen haben.**
+
+Alles Weitere — Modelle, Skripte, Tests — legt ihr so ab, wie es euch dient. Verbindlich ist nicht
+die Ordnerstruktur, sondern dass ein anderes Team eure Entscheidungen nachvollziehen und die
+Prüfbefehle nach einem eigenen Neuaufbau erneut ausführen kann.
 
 ---
 
@@ -231,7 +236,7 @@ nachvollziehen und die Prüfbefehle nach einem eigenen Neuaufbau erneut ausführ
 Bearbeitet zuerst die in der Begleit-Website angezeigten Trainingsfälle für
 Entity-Relationship-Diagramme (ERD). Öffnet danach dort die LetsMeet-Modellierungsstation,
 entwickelt ER-Diagramm und relationales Schema und registriert die vollständige Freigabe-URL
-(Share-URL) eures Modells. Sichert dieselbe URL zusätzlich in eurer Projektdokumentation.
+(Share-URL) eures Modells. Sichert dieselbe URL zusätzlich in eurer Befundnotiz.
 
 Berücksichtigt dabei:
 
@@ -257,7 +262,8 @@ Berücksichtigt dabei:
 Das Backup läuft bereits im Compose-Service `mongodb_for_lf8`. Die Sammlung `users` enthält
 ergänzende Profildaten sowie gerichtete Likes und Nachrichten. Analysiert insbesondere
 verschachtelte Datensätze, Referenzen, Mehrfachwerte und Widersprüche zur Excel-Quelle. Holt für
-offene fachliche Konflikte eine Kundinnenentscheidung ein und dokumentiert die angewandte Regel.
+offene fachliche Konflikte eine Kundinnenentscheidung ein und haltet die angewandte Regel in eurer
+Befundnotiz fest.
 
 ## Datenvertrag für Akt 2 (V2)
 
