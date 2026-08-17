@@ -65,7 +65,11 @@ letsmeet up
 
 Damit laufen dieselben drei Dienste als gewöhnliche Programme in eurem eigenen Arbeitsbereich.
 `letsmeet status` zeigt, was gerade läuft; `letsmeet down` stoppt alles wieder, ohne eure Daten
-zu löschen.
+zu löschen. `letsmeet zugang` zeigt euch jederzeit alle Verbindungsdaten.
+
+Als Einstieg im Browser liegt `notebooks/00-zugriff.ipynb` bereit: Es prüft, ob die Dienste
+laufen, und stellt je eine Verbindung zu MongoDB und PostgreSQL her. Mehr macht es nicht — die
+Analyse ist eure Arbeit.
 
 ### In beiden Varianten erreichbar
 
@@ -367,6 +371,10 @@ mongodb://localhost:27017/LetsMeet
 Auf dem Schulserver laufen grafische Werkzeuge wie DBeaver oder Compass nicht. Die Verbindungsdaten
 sind dieselben; ihr erreicht die Datenbanken im Terminal mit `letsmeet psql` und `letsmeet mongosh`
 oder aus einem Notebook heraus. `letsmeet zugang` zeigt euch diese Angaben jederzeit an.
+
+Ein fertiges Startnotebook liegt unter `notebooks/00-zugriff.ipynb` — beide Verbindungen als
+lauffähige Zellen, dazu SQL direkt in der Zelle über `%sql`. Es ist auf den Schulserver
+zugeschnitten; unter Docker tauscht ihr im Verbindungsstring `pg8000` gegen euren Treiber.
 
 **Eine Abweichung, die ihr sonst suchen müsstet:** Der PostgreSQL-Treiber heißt auf dem Schulserver
 `pg8000`, nicht `psycopg2`. `pg8000` ist dort bereits installiert, `psycopg2` nicht — nehmt
