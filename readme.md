@@ -369,9 +369,8 @@ sind dieselben; ihr erreicht die Datenbanken im Terminal mit `letsmeet psql` und
 oder aus einem Notebook heraus. `letsmeet zugang` zeigt euch diese Angaben jederzeit an.
 
 **Eine Abweichung, die ihr sonst suchen müsstet:** Der PostgreSQL-Treiber heißt auf dem Schulserver
-`pg8000`, nicht `psycopg2`. `psycopg2` ist dort nicht installiert und lässt sich auch nicht
-nachinstallieren — es müsste beim Installieren übersetzt werden, was auf der Hardware der Server
-nicht funktioniert. `pg8000` ist bereits vorhanden und wird über den Verbindungsstring ausgewählt:
+`pg8000`, nicht `psycopg2`. `pg8000` ist dort bereits installiert, `psycopg2` nicht — nehmt
+`pg8000`. Ausgewählt wird er über den Verbindungsstring:
 
 ```python
 # PostgreSQL
