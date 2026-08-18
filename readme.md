@@ -257,7 +257,9 @@ entwickelt ER-Diagramm und relationales Schema und registriert die vollständige
 Berücksichtigt dabei:
 
 - Transformation ins Relationenmodell und dritte Normalform; siehe
-  [`normalization.md`](./normalization.md);
+  [`normalization.md`](./normalization.md). Wenn ihr noch kein Gefühl dafür habt, woran man eine
+  unaufgeräumte Tabelle merkt, lest vorher [`gute-tabellen.md`](./gute-tabellen.md) — dieselben
+  Daten einmal gewachsen und einmal aufgeräumt, ohne Regelwerk;
 - priorisierte und ausdrücklich nicht gemochte Hobbys (`-100` bis `100`). Der Wertebereich ist
   fachlich mit der Kundin vereinbart; die aktuelle Datenlieferung schöpft ihn nicht aus. Modelliert
   den vereinbarten Bereich, nicht den in der Stichprobe vorgefundenen;
