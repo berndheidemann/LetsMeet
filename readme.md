@@ -109,6 +109,18 @@ docker compose up -d --force-recreate kundinnen_app
 letsmeet contract V2
 ```
 
+## Vor Akt 1: eine Aufwärmrunde
+
+Bevor es an die echten Daten geht, macht ihr **alle** einmal `notebooks/01-erd-zu-tabelle.ipynb` —
+35 Minuten an einem fremden Fall, einer Fahrradwerkstatt. Aus einem kleinen ER-Diagramm baut ihr
+zwei Tabellen, füllt sie, prüft die Beziehung mit einem `JOIN` und beantwortet eine Frage. Vier
+Schritte, nach jedem steht ein prüfbares „Fertig, wenn …“.
+
+Der Zweck: `CREATE TABLE`, `INSERT` und `JOIN` einmal an einem winzigen Fall gesehen zu haben,
+bevor sie in Akt 1 gleichzeitig mit Datenqualität, Migration und Git auf euch treffen. Mit
+Let’s Meet hat der Fall nichts zu tun — übertragen müsst ihr selbst. Alle Tabellen darin heißen
+`demo_…` und stören eure spätere Migration nicht.
+
 ---
 
 # Akt 1 — Erste Daten aus Excel bis zur Kundinnen-App bringen
@@ -375,6 +387,8 @@ oder aus einem Notebook heraus. `letsmeet zugang` zeigt euch diese Angaben jeder
 Ein fertiges Startnotebook liegt unter `notebooks/00-zugriff.ipynb` — beide Verbindungen als
 lauffähige Zellen, dazu SQL direkt in der Zelle über `%sql`. Es ist auf den Schulserver
 zugeschnitten; unter Docker tauscht ihr im Verbindungsstring `pg8000` gegen euren Treiber.
+Daneben liegt `notebooks/01-erd-zu-tabelle.ipynb`, die Aufwärmrunde vor Akt 1 (siehe
+[Vor Akt 1: eine Aufwärmrunde](#vor-akt-1-eine-aufwärmrunde)).
 
 **Eine Abweichung, die ihr sonst suchen müsstet:** Der PostgreSQL-Treiber heißt auf dem Schulserver
 `pg8000`, nicht `psycopg2`. `pg8000` ist dort bereits installiert, `psycopg2` nicht — nehmt
