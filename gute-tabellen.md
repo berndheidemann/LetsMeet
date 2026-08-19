@@ -19,9 +19,6 @@ jeden neuen Film kam eine Zeile dazu. Alles steht in **einer** Tabelle — das w
 | Lola rennt | 1998 | Thriller, Drama | Tom Tykwer | 1965 | X-Filme | Berlin |
 | Das Leben der Anderen | 2006 | Drama, Polit-Thriller | Florian H. von Donnersmarck | 1973 | Wiedemann & Berg | München |
 
-Lies die Spalten `regie` / `regie_geboren` und `studio` / `studio_stadt` einmal von oben nach
-unten. Fällt dir etwas auf?
-
 ## Wunsch 1 — „Zeig mir alle Thriller."
 
 Die Datenbank soll die Zeilen finden, bei denen `Thriller` im Genre steht.
