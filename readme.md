@@ -236,6 +236,10 @@ Dazu einmal im Projekt, spätestens wenn ihr die Daten das erste Mal vollständi
 
 4. **Welche dieser Daten sind besonders schützenswert, und was folgt daraus für euren Umgang damit?**
 
+Datenschutz ist hier ein Randthema: Wenige Stichpunkte zu dieser Frage genügen. Ein eigenes
+Datenschutzkonzept, eine juristische Prüfung der Rechtsgrundlagen oder ein Maßnahmenkatalog
+sind nicht Teil eures Auftrags.
+
 Die Notiz ist kein Aufsatz. Stichpunkte genügen, solange sie jemand anderes versteht. Sie ist euer
 eigenes Arbeitsmittel: **Im Fachgespräch dürft ihr sie offen vor euch liegen haben.**
 
@@ -265,8 +269,6 @@ Berücksichtigt dabei:
   den vereinbarten Bereich, nicht den in der Stichprobe vorgefundenen;
 - Freundeslisten;
 - ein direkt gespeichertes Profilbild sowie weitere hochgeladene oder verlinkte Fotos;
-- Datenschutz: Datenarten, Rechtsgrundlage, Schutzbedarf und technische/organisatorische
-  Maßnahmen;
 - je Anwendungsfall eine beispielhafte SQL-Abfrage;
 - physische Modelle und die zugehörige DDL sowohl für die aufgenommenen Quelldaten als auch für
   das PostgreSQL-Zielsystem;
