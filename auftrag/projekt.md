@@ -1,5 +1,17 @@
 # Arbeitsweise, Befundnotiz und Artefakte
 
+## Hinweis für laufende Teams
+
+Die Aufträge sind jetzt übersichtlicher geordnet und unklare Stellen präzisiert. Es gibt dadurch
+**keine zusätzlichen Abgaben**. Arbeitet an eurem bisherigen Stand weiter: Wegen dieser Umstellung
+müsst ihr **keine Datenbank leeren oder Modelle neu erstellen**. Bestehende Absprachen mit eurer
+Lehrkraft bleiben bestehen.
+
+Zum Wiederfinden bisheriger Stellen bleibt die
+[alte Aufgabenfassung](https://github.com/berndheidemann/LetsMeet/blob/b19984ea3bcbcc5f6951463344f8fa7214ff8d4c/readme.md)
+als Orientierung erreichbar. Sie wird nicht weiter gepflegt; die aktuellen Aufträge findet ihr
+hier und in den Akt-Karten der Begleit-Website.
+
 ## Arbeitsweise
 
 Ihr arbeitet in drei Akten. Akt 1 und Akt 2 sind vollständig beschrieben ([Akt 1](./akt-1.md),

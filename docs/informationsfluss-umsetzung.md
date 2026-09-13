@@ -1,4 +1,4 @@
-# Informationsfluss für den nächsten LetsMeet-Durchlauf
+# Informationsfluss und kontrollierter Wechsel im laufenden LetsMeet-Kurs
 
 ## Freigegebener Umfang
 
@@ -48,12 +48,18 @@ anschließend ausdrücklich in das Website-Repository synchronisiert. Generierte
 von Hand bearbeiten. Für die Veröffentlichung muss der Snapshot auf den sauberen, gepushten
 Materialstand zeigen; ein Dirty-Snapshot ist nur ein Entwicklungsstand.
 
-Die neue Fassung wird zunächst auf `next/informationsfluss` in beiden Repositories gesichert.
-Sie wird **nicht** in die laufende Kursfassung übernommen und die Begleitwebsite wird **nicht**
-neu deployt. Erst nach Ende beziehungsweise ausdrücklicher Freigabe des laufenden Durchlaufs
-werden die zusammengehörenden Stände übernommen und veröffentlicht. Die Start-README dieser
-vorbereiteten Fassung beschreibt bereits die dann gemeinsam zu veröffentlichende Website;
-sie ist deshalb nicht als isolierter README-Hotfix für den aktuellen Kurs gedacht.
+Die neue Fassung wurde zunächst auf `next/informationsfluss` in beiden Repositories gesichert,
+ohne den laufenden Kurs zu verändern. Am 13.09.2026 hat Bernd ausdrücklich den kontrollierten
+Wechsel **im laufenden Kurs** freigegeben: Übergangshinweis, zugängliche Altfassung und unveränderte
+fachliche Anforderungen. Material und Website werden deshalb zusammen veröffentlicht, nicht als
+isolierter README-Hotfix.
+
+Der Hinweis für laufende Teams steht verbindlich in `auftrag/projekt.md`; die Website übernimmt
+ihn aus demselben Snapshot. Die alte README bleibt über den unveränderlichen Commit `b19984e`
+erreichbar, ausdrücklich nur zur Orientierung. Bestehende Absprachen mit der Lehrkraft bleiben
+bestehen. Wegen der Informationsumstellung werden weder Modelle noch Datenbanken zurückgesetzt.
+Bereits geklonte Schülerprojekte können den neuen Akt-3-Helfer einzeln über einen fest gepinnten
+Download nachladen, ohne eigene Dateien oder das gesamte Projekt zu ersetzen.
 
 Akt 3 bleibt in der Website an seine bisherige Freigabe gebunden. Die Materialdateien im
 Repository sind technisch auffindbar; wie bisher ist dies didaktische Reihenfolge und kein
@@ -104,5 +110,27 @@ prüfen Argumente, Pfade mit Leerzeichen/Sonderzeichen, Umgebungsvariablen, Arbe
 Exitcodes 1/2 und frühe Fehler. Zwei gezielte Mutationen in Wegwerfkopien wurden erkannt:
 Argumentweitergabe entfernt und Versionsprüfung deaktiviert. Beide führten zu roten Tests.
 
-Eine tatsächliche Ausführung gegen den Schulserver ist damit nicht behauptet. Vor dem nächsten
-Unterrichtseinsatz gehört der V3-Durchlauf mit dem neuen Helfer zur Live-Abnahme des Gesamtpakets.
+## Schulserver-Abnahme am 13.09.2026
+
+Nach Herstellung der Schul-VPN-Verbindung wurde der Helfer auf `euler-host` tatsächlich geprüft:
+in einem temporären Container des vorhandenen Images `euler-jhub:v42-litellm`, ohne externes
+Netzwerk, mit der produktiven Schüler-Mountquelle read-only unter `/opt/letsmeet` und einer
+eigens angelegten PostgreSQL-Instanz. Verwendet wurden die vorhandene App (Stand `f3113b9`),
+Node 16.20.2 und PostgreSQL 16.14 auf ppc64le. Alle vier Ground-Truth-Dateien waren hashgleich
+zur lokalen Referenzquelle.
+
+- Referenz-V3-Import zweimal ausgeführt: Snapshot speichern und vergleichen jeweils Exit 0;
+  erst der Vergleich setzt `gateComplete` und `gatePassed`.
+- Zulässige Begründung gezielt verändert: Snapshotvergleich erkennt den Unterschied,
+  `v3-idempotency` rot und Exit 1.
+- Fehlende Snapshotdatei: Exit 2 wird durchgereicht.
+- Snapshotpfad mit Leerzeichen und Umlaut funktioniert.
+- Download des gepinnten Helfers aus dem Jupyter-Container über den Schüler-Zugangsweg `euler`:
+  SHA-256 stimmt mit der getesteten Datei überein
+  (`697b90b6235149d67aeabfae5613003c823e3d3e81bf8f524577a9d02b0305a4`).
+
+Die temporäre Datenbank wurde gestoppt, Container und Testverzeichnis wurden entfernt. Keine
+bestehende Schülerdatenbank, kein laufender Schülerprozess und keine gemeinsame Installation
+wurden geändert. Dies prüft den Helfer mit einer Referenzlösung, nicht die individuellen
+Migrationen der Lernenden. Probe und Ergebnisprotokoll liegen lokal unter
+`/tmp/letsmeet-rollout-20260913/`; die wesentlichen Befunde sind hier dauerhaft festgehalten.
