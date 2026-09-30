@@ -23,12 +23,6 @@ Arbeitsanweisungen. Ihr könnt sie also auch hier im Repository nachlesen:
 - [Akt 2 — Zielmodell und MongoDB](./auftrag/akt-2.md)
 - Akt 3 folgt, sobald die Begleit-Website ihn nach Akt 2 freigibt.
 
-**Ihr arbeitet bereits am Projekt?** Lest den
-[Hinweis zur Umstellung](./auftrag/projekt.md#hinweis-für-laufende-teams). Eure bisherige Arbeit
-bleibt die Grundlage; es gibt dadurch keine zusätzlichen Abgaben. Die
-[alte Aufgabenfassung](https://github.com/berndheidemann/LetsMeet/blob/b19984ea3bcbcc5f6951463344f8fa7214ff8d4c/readme.md)
-bleibt zum Wiederfinden bisheriger Stellen erreichbar.
-
 ## Vorbereitung und Arbeitsumgebung
 
 Der technische Einstieg — Start/Stopp in beiden Betriebsarten (Docker oder Schulserver),

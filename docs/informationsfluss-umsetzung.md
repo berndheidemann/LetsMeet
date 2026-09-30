@@ -61,6 +61,10 @@ bestehen. Wegen der Informationsumstellung werden weder Modelle noch Datenbanken
 Bereits geklonte Schülerprojekte können den neuen Akt-3-Helfer einzeln über einen fest gepinnten
 Download nachladen, ohne eigene Dateien oder das gesamte Projekt zu ersetzen.
 
+Nach Kursende hat Bernd am 30.09.2026 den Hinweis für laufende Teams zurückgenommen: Er steht
+nicht mehr in `auftrag/projekt.md` und `readme.md`, und die Website zeigt keinen Übergangshinweis
+mehr. Der Altfassungs-Commit `b19984e` bleibt in der Git-Historie erhalten.
+
 Akt 3 bleibt in der Website an seine bisherige Freigabe gebunden. Die Materialdateien im
 Repository sind technisch auffindbar; wie bisher ist dies didaktische Reihenfolge und kein
 Zugriffsschutz. Der Schülertext unterscheidet deshalb Auffindbarkeit und Bearbeitungsfreigabe.
