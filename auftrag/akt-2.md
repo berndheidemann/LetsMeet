@@ -105,6 +105,7 @@ einer Einschränkung in eurer DDL.
 - Eine Person kann nach mehreren Hobbys suchen und jedes unterschiedlich wichtig nehmen.
 - Ändert jemand seine Suche, bleiben die eigenen Hobbyangaben unverändert, und umgekehrt.
 - Für eine Person lässt sich abfragen, welche anderen Personen eines ihrer gesuchten Hobbys haben.
+  Wer dieses Hobby ausdrücklich ablehnt (negative Priorität), zählt dabei nicht als Treffer.
 
 **Story 3 — Freundesliste**
 
@@ -113,8 +114,11 @@ einer Einschränkung in eurer DDL.
 
 - Für jede Person lässt sich ihre Freundesliste abfragen. Eine Person kann beliebig viele
   Freundinnen und Freunde haben.
+- Eine Freundschaft entsteht erst, wenn beide zugestimmt haben. Eine Anfrage, der die andere
+  Person noch nicht zugestimmt hat, bringt niemanden in eine Freundesliste.
 - Freundschaft beruht auf Gegenseitigkeit: Steht B in der Freundesliste von A, steht auch A in der
-  von B. Wie euer Modell das sicherstellt, entscheidet ihr und begründet es in der Befundnotiz.
+  von B. Wie euer Modell Zustimmung und Gegenseitigkeit sicherstellt, entscheidet ihr und
+  begründet es in der Befundnotiz.
 - Niemand steht zweimal in derselben Freundesliste und niemand in seiner eigenen.
 - Ein Like aus der MongoDB-Quelle macht noch niemanden zur Freundin oder zum Freund.
 
