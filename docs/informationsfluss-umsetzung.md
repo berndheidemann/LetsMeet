@@ -63,7 +63,9 @@ Download nachladen, ohne eigene Dateien oder das gesamte Projekt zu ersetzen.
 
 Nach Kursende hat Bernd am 30.09.2026 den Hinweis für laufende Teams zurückgenommen: Er steht
 nicht mehr in `auftrag/projekt.md` und `readme.md`, und die Website zeigt keinen Übergangshinweis
-mehr. Der Altfassungs-Commit `b19984e` bleibt in der Git-Historie erhalten.
+mehr. Der Altfassungs-Commit `b19984e` bleibt in der Git-Historie erhalten. Aus demselben Grund
+entfiel die Nachladeanleitung für den Akt-3-Helfer in `auftrag/akt-3.md`: Neue Klone enthalten
+`scripts/check-schulserver.sh` bereits.
 
 Akt 3 bleibt in der Website an seine bisherige Freigabe gebunden. Die Materialdateien im
 Repository sind technisch auffindbar; wie bisher ist dies didaktische Reihenfolge und kein

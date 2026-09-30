@@ -77,18 +77,7 @@ docker compose run --rm -e CONTRACT_VERSION=V3 kundinnen_app node server/dist/cl
 
 Variante B — Schulserver — verwendet dafür das Hilfsskript
 [`scripts/check-schulserver.sh`](../scripts/check-schulserver.sh), weil `letsmeet check V3` allein
-keine weiteren Argumente entgegennimmt.
-
-**Bei bereits geklonten Projekten:** Falls dieser Helfer noch fehlt, ladet nur diese eine Datei
-im Projekt-Wurzelverzeichnis nach. Ihr müsst weder neu klonen noch eure Modelle oder Imports
-ersetzen. Ist die Datei schon vorhanden, überspringt den Download.
-
-```bash
-mkdir -p scripts && curl -fL https://raw.githubusercontent.com/berndheidemann/LetsMeet/ba718e475b72e6e78c72926f26beddf871985e74/scripts/check-schulserver.sh -o scripts/check-schulserver.sh
-```
-
-Der Link zeigt auf die fest geprüfte Version. Bei einem Downloadfehler wiederholt den Download,
-bevor ihr den Helfer verwendet. Speichert dann den Vergleichszustand:
+keine weiteren Argumente entgegennimmt. Speichert damit den Vergleichszustand:
 
 ```bash
 bash scripts/check-schulserver.sh V3 --snapshot-out "$HOME/work/letsmeet/v3-snapshot.json"
