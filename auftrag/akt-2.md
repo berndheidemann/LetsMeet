@@ -44,19 +44,24 @@ ER-Diagramm und relationales Schema und registriert in der Begleit-Website die v
 Freigabe-URL (Share-URL) eures Modells.
 Sichert dieselbe URL zusätzlich in eurer Befundnotiz.
 
+Euer Zielmodell trägt zwei Arten von Anforderungen:
+
+- **Die Altdaten** aus Excel und MongoDB. Was die Datenbank davon liefern muss, legt der
+  [Datenvertrag V2](#datenvertrag-für-akt-2-v2) fest. Er ist hierfür euer Akzeptanzkriterium,
+  und der Prüfbefehl zeigt, ob ihr es erfüllt.
+- **Die Erweiterungswünsche der Kundin**, für die es noch keine Daten gibt. Sie stehen unten als
+  [User Stories mit Akzeptanzkriterien](#anforderungen-der-kundin-als-user-stories). Der
+  Prüfbefehl liest euer Modell nicht; ob eure Lösung diese Kriterien erfüllt, prüft ihr selbst.
+
 Berücksichtigt dabei:
 
 - Transformiert das ER-Diagramm ins Relationenmodell und bringt das relationale Schema in die
   dritte Normalform; nutzt dazu die oben verlinkten Hilfen.
-- Entwickelt das Zielmodell einschließlich der folgenden fachlichen Anforderungen:
-  - priorisierte und ausdrücklich nicht gemochte Hobbys (`-100` bis `100`). Der Wertebereich ist
-    fachlich mit der Kundin vereinbart; die aktuelle Datenlieferung schöpft ihn nicht aus.
-    Modelliert den vereinbarten Bereich, nicht den in der Stichprobe vorgefundenen;
-  - getrennt von der Priorität des eigenen Hobbys: nach welchem Hobby jemand bei anderen sucht,
-    wie im Szenario der Modellierungsstation beschrieben;
-  - Freundeslisten;
-  - ein direkt gespeichertes Profilbild sowie weitere hochgeladene oder verlinkte Fotos;
-  - je Anwendungsfall eine beispielhafte SQL-Abfrage.
+- Alle Anwendungsfälle im Diagramm unten und alle User Stories sind Anforderungen an euer Modell.
+  Belegt es mit **zwei bis drei SQL-Artefakten**, zum Beispiel einer Leseabfrage, einer
+  Änderung mit Parametern (DML) und einer Einschränkung in der DDL (Constraint). Die
+  Akzeptanzkriterien der Stories eignen sich gut dafür. Weitere Anwendungsfälle als SQL
+  auszuformulieren ist nicht verlangt.
 - ERD und relationales Schema erstellen; Trainingsfälle und Projektmodell klar auseinanderhalten.
 - MongoDB-Quelle analysieren, Konflikte klären und Import erweitern (siehe unten).
 - Physische Modelle und die zugehörige DDL sowohl für die aufgenommenen Quelldaten als auch für
@@ -67,6 +72,64 @@ Berücksichtigt dabei:
   [projekt.md](./projekt.md#eure-befundnotiz)).
 
 ![Anwendungsfalldiagramm für die LetsMeet-Datenbank](../images/use-case.png)
+
+### Anforderungen der Kundin als User Stories
+
+Jede Story sagt, wer etwas möchte, was und wozu. Die Akzeptanzkriterien darunter beschreiben, was
+euer Modell dann leisten muss, nicht, wie ihr es baut. Eine Story ist erfüllt, wenn ihr jedes
+Kriterium an eurem Modell zeigen könnt: an einem Beispieldatensatz, mit einer Abfrage oder mit
+einer Einschränkung in eurer DDL.
+
+**Story 1 — Hobbys mögen und ablehnen**
+
+> Als Mitglied möchte ich zu meinen Hobbys angeben, wie sehr ich sie mag oder ausdrücklich nicht
+> mag, damit mir besser passende Personen vorgeschlagen werden.
+
+- Zu jedem Hobby einer Person lässt sich eine Priorität von `-100` bis `100` festhalten. Negative
+  Werte bedeuten „mag ich ausdrücklich nicht“.
+- Der Bereich `-100` bis `100` ist mit der Kundin vereinbart. Die aktuelle Datenlieferung schöpft
+  ihn nicht aus; euer Modell erlaubt trotzdem den ganzen vereinbarten Bereich.
+- Einen Wert außerhalb des Bereichs weist die Datenbank selbst zurück, nicht erst euer
+  Importskript.
+- Ändert eine Person die Priorität eines Hobbys, bleiben die Angaben anderer Personen zu demselben
+  Hobby unverändert.
+
+**Story 2 — Nach Hobbys suchen**
+
+> Als Mitglied möchte ich angeben, nach welchen Hobbys ich bei anderen suche und wie wichtig mir
+> jedes davon ist, damit ich Menschen mit ähnlichen Interessen finde.
+
+- Wonach jemand sucht, ist getrennt von den eigenen Hobbys und ihrer Priorität festgehalten. Man
+  kann nach einem Hobby suchen, das man selbst nicht hat, und ein Hobby haben, ohne danach zu
+  suchen.
+- Eine Person kann nach mehreren Hobbys suchen und jedes unterschiedlich wichtig nehmen.
+- Ändert jemand seine Suche, bleiben die eigenen Hobbyangaben unverändert, und umgekehrt.
+- Für eine Person lässt sich abfragen, welche anderen Personen eines ihrer gesuchten Hobbys haben.
+
+**Story 3 — Freundesliste**
+
+> Als Mitglied möchte ich andere Mitglieder in meine Freundesliste aufnehmen, damit ich sie
+> schnell wiederfinde und mit ihnen in Kontakt bleibe.
+
+- Für jede Person lässt sich ihre Freundesliste abfragen. Eine Person kann beliebig viele
+  Freundinnen und Freunde haben.
+- Freundschaft beruht auf Gegenseitigkeit: Steht B in der Freundesliste von A, steht auch A in der
+  von B. Wie euer Modell das sicherstellt, entscheidet ihr und begründet es in der Befundnotiz.
+- Niemand steht zweimal in derselben Freundesliste und niemand in seiner eigenen.
+- Ein Like aus der MongoDB-Quelle macht noch niemanden zur Freundin oder zum Freund.
+
+**Story 4 — Profilbild und weitere Fotos**
+
+> Als Mitglied möchte ich ein Profilbild und weitere Fotos zeigen, damit andere einen Eindruck von
+> mir bekommen.
+
+- Eine Person hat höchstens ein Profilbild. Die migrierten Profile haben noch keines; das ist
+  zulässig.
+- Daneben kann eine Person beliebig viele weitere Fotos haben. Jedes Foto gehört genau einer
+  Person.
+- Für jedes Foto ist festgehalten, wo das Bild liegt: als gespeicherte Datei oder als Link.
+- Ein Foto lässt sich hinzufügen, austauschen und löschen, ohne die übrigen Angaben der Person zu
+  verändern. Tauscht jemand sein Profilbild aus, hat die Person danach trotzdem nur eines.
 
 ## MongoDB-Quelle
 
@@ -141,6 +204,8 @@ ins relationale Schema. Beides gehört zum Modellierungsauftrag.
 Die ERD-Werkbank gibt Rückmeldung zu eurem Modell und seiner Ableitung. Der Kundinnen-Checker
 prüft dagegen die Datenbank-Views und ihre Inhalte. Er liest nicht euer ER-Diagramm. Ein
 erfolgreicher Datenbankcheck ersetzt deshalb nicht die geforderten Modellierungsarbeiten.
+Auch die Akzeptanzkriterien der User Stories prüft keines der beiden Werkzeuge vollständig; sie
+weist ihr an eurem Modell selbst nach.
 
 Die Begleit-Website merkt sich nur eure Bestätigungen und den Modelllink. Ein gespeicherter Link
 bedeutet nicht, dass euer Modell fachlich geprüft wurde.
